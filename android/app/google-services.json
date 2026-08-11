@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "276808349193",
+    "project_id": "productivity-app-arda-5e8b4",
+    "storage_bucket": "productivity-app-arda-5e8b4.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:276808349193:android:7ea1e57d54157c05d4ead8",
+        "android_client_info": {
+          "package_name": "com.ardakadi.productivityapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB9WoWGFVXmZ3j4AFj6b8dBxnPOyPJ9SoE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

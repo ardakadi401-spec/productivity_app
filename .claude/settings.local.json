@@ -1,0 +1,48 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c/Users/ardak/Desktop/Uygulama Proje/productivity_app/**)",
+      "Bash(flutter pub *)",
+      "Bash(rmdir \"/c/Users/ardak/Desktop/Uygulama Proje/productivity_app/android/app/src/main/kotlin/com/example/productivity_app\")",
+      "Bash(rmdir \"/c/Users/ardak/Desktop/Uygulama Proje/productivity_app/android/app/src/main/kotlin/com/example\")",
+      "Bash(flutter analyze *)",
+      "Bash(flutter test *)",
+      "Bash(flutter devices *)",
+      "Bash(flutter run *)",
+      "Bash(tasklist)",
+      "PowerShell(Get-Process *)",
+      "Bash(cd \"/c/Users/ardak/Desktop/Uygulama Proje/productivity_app\" && ls -la)",
+      "Bash(cd \"/c/Users/ardak/Desktop/Uygulama Proje/productivity_app\" && find . -maxdepth 2 -iname \"*progress*\" -o -maxdepth 2 -iname \"*todo*\" -o -maxdepth 2 -iname \"*plan*\" 2>/dev/null | grep -v node_modules)",
+      "Bash(mkdir -p \"/c/Users/ardak/Desktop/Uygulama Proje/productivity_app/lib/app\")",
+      "PowerShell(New-Item -ItemType Directory -Force -Path \"lib\\\\app\")",
+      "Bash(cd \"/c/Users/ardak/Desktop/Uygulama Proje/productivity_app\" && flutter analyze 2>&1 | tail -50)",
+      "PowerShell(flutter analyze)",
+      "PowerShell(flutter test)",
+      "PowerShell(dart pub global activate flutterfire_cli)",
+      "PowerShell(Test-Path \"$env:LOCALAPPDATA\\\\Pub\\\\Cache\\\\bin\\\\flutterfire.bat\")",
+      "Bash(python3 -c \"import json; d=json.load\\(open\\('android/app/google-services.json'\\)\\); print\\(d['project_info']['project_id']\\); print\\([c['client_info']['android_client_info']['package_name'] for c in d['client']]\\)\")",
+      "PowerShell(flutter pub get)",
+      "PowerShell(flutter build apk --debug)",
+      "PowerShell(Test-NetConnection -ComputerName dl.google.com -Port 443 -WarningAction SilentlyContinue)",
+      "WebFetch(domain:pub.dev)",
+      "PowerShell(Get-Command flutter)",
+      "PowerShell(flutter --version)",
+      "PowerShell(New-Item -ItemType Directory -Force -Path \".github\\\\workflows\")",
+      "PowerShell(flutter devices)",
+      "PowerShell(flutter emulators)",
+      "PowerShell(python --version 2>&1)",
+      "Bash(python -)",
+      "PowerShell(flutter emulators --create --name faz2_pixel)",
+      "PowerShell(& \"C:\\\\Program Files\\\\Android\\\\Android Studio\\\\jbr\\\\bin\\\\java.exe\" -version)",
+      "PowerShell(Get-Process | Where-Object { $_.ProcessName -match \"qemu|emulator\" } | Select-Object ProcessName, Id, StartTime)",
+      "PowerShell(Start-Process -FilePath \"C:\\\\Users\\\\ardak\\\\AppData\\\\Local\\\\Android\\\\sdk\\\\extras\\\\google\\\\Android_Emulator_Hypervisor_Driver\\\\silent_install.bat\" -Verb RunAs -Wait -PassThru | Select-Object ExitCode)",
+      "PowerShell(Get-Service -Name \"aehd\" -ErrorAction SilentlyContinue)",
+      "PowerShell(sc.exe query aehd 2>&1)",
+      "PowerShell(flutter run -d emulator-5554 --release 2>&1)",
+      "PowerShell(flutter run -d emulator-5554)"
+    ],
+    "additionalDirectories": [
+      "C:\\Users\\ardak\\Desktop\\Uygulama Proje\\productivity_app\\lib\\app"
+    ]
+  }
+}
