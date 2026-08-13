@@ -1,0 +1,42 @@
+name: iOS Unsigned Build
+
+# iPhone'a Sideloadly ile sideload edilecek imzasiz (.ipa) test build'i uretir.
+# Code signing/Apple Developer hesabi CI'da GEREKMEZ - imzalama, kullanicinin
+# kendi Apple ID'siyle Sideloadly uzerinden yerel (Windows) makinede yapilir.
+#
+# Yalnizca elle tetiklenir (workflow_dispatch): macOS runner dakikalari
+# ucretsiz planda 10x carpanla tuketildiginden, her push/PR'da otomatik
+# calismaz. Actions sekmesinden "Run workflow" ile baslatilir.
+on:
+  workflow_dispatch:
+
+jobs:
+  build-ios:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.44.8"
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build iOS (unsigned)
+        run: flutter build ios --release --no-codesign
+
+      - name: Package unsigned .ipa
+        run: |
+          mkdir -p Payload
+          cp -r build/ios/iphoneos/Runner.app Payload/Runner.app
+          zip -r app-unsigned.ipa Payload
+
+      - name: Upload .ipa artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: productivity-app-unsigned-ipa
+          path: app-unsigned.ipa
+          retention-days: 14
