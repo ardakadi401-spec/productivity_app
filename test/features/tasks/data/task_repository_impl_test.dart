@@ -262,6 +262,145 @@ void main() {
     });
   });
 
+  group('syncPending — FAZ 14 ADIM 5 (SyncCoordinator giriş noktası)', () {
+    test('offline durumda hiçbir şey yapmaz', () async {
+      // setUp zaten connectivity.isConnected: false stub'ladı; kurucunun
+      // arka plan `_syncFromRemote`'unun bu no-op'u tamamlaması için bekle.
+      await Future<void>.delayed(Duration.zero);
+
+      await repository.syncPending();
+
+      verifyNever(() => remote.setTask(any()));
+    });
+
+    test('pendingCreate kaydını online olduğunda gönderir ve synced yapar', () async {
+      await Future<void>.delayed(Duration.zero);
+      when(() => connectivity.isConnected).thenAnswer((_) async => true);
+      final pendingModel = _model(syncStatus: SyncStatusLocal.pendingCreate);
+      when(() => local.getPendingSync()).thenAnswer((_) async => [pendingModel]);
+      when(() => remote.setTask(any())).thenAnswer((_) async {});
+      when(() => local.putTask(any())).thenAnswer((_) async {});
+
+      await repository.syncPending();
+
+      verify(() => remote.setTask(pendingModel)).called(1);
+      final captured = verify(() => local.putTask(captureAny())).captured.single as TaskLocalModel;
+      expect(captured.syncStatus, SyncStatusLocal.synced);
+      expect(captured.lastSyncedAt, isNotNull);
+    });
+
+    test('pendingUpdate kaydını online olduğunda gönderir ve synced yapar', () async {
+      await Future<void>.delayed(Duration.zero);
+      when(() => connectivity.isConnected).thenAnswer((_) async => true);
+      final pendingModel = _model(syncStatus: SyncStatusLocal.pendingUpdate);
+      when(() => local.getPendingSync()).thenAnswer((_) async => [pendingModel]);
+      when(() => remote.setTask(any())).thenAnswer((_) async {});
+      when(() => local.putTask(any())).thenAnswer((_) async {});
+
+      await repository.syncPending();
+
+      verify(() => remote.setTask(pendingModel)).called(1);
+      final captured = verify(() => local.putTask(captureAny())).captured.single as TaskLocalModel;
+      expect(captured.syncStatus, SyncStatusLocal.synced);
+    });
+
+    test('pendingDelete kaydını online olduğunda gönderir ve synced yapar', () async {
+      await Future<void>.delayed(Duration.zero);
+      when(() => connectivity.isConnected).thenAnswer((_) async => true);
+      final pendingModel = _model(syncStatus: SyncStatusLocal.pendingDelete)
+        ..isDeleted = true
+        ..deletedAt = DateTime(2026, 1, 2);
+      when(() => local.getPendingSync()).thenAnswer((_) async => [pendingModel]);
+      when(() => remote.setTask(any())).thenAnswer((_) async {});
+      when(() => local.putTask(any())).thenAnswer((_) async {});
+
+      await repository.syncPending();
+
+      verify(() => remote.setTask(pendingModel)).called(1);
+      final captured = verify(() => local.putTask(captureAny())).captured.single as TaskLocalModel;
+      expect(captured.syncStatus, SyncStatusLocal.synced);
+      expect(captured.isDeleted, isTrue);
+    });
+
+    test('remote gönderimi hata verirse kayıt pending kalır, hiçbir istisna dışarı fırlamaz', () async {
+      await Future<void>.delayed(Duration.zero);
+      when(() => connectivity.isConnected).thenAnswer((_) async => true);
+      final pendingModel = _model(syncStatus: SyncStatusLocal.pendingUpdate);
+      when(() => local.getPendingSync()).thenAnswer((_) async => [pendingModel]);
+      when(() => remote.setTask(any())).thenThrow(const NetworkException('boom'));
+
+      await repository.syncPending();
+
+      verifyNever(() => local.putTask(any()));
+      expect(pendingModel.syncStatus, SyncStatusLocal.pendingUpdate);
+    });
+  });
+
+  group('uzaktan senkronizasyon (Last-Write-Wins) — FAZ 14', () {
+    // `_syncFromRemote` yalnızca constructor'da (bağlantı zaten `true`
+    // stub'lanmış durumda) çalıştığından, bu testler kendi bağımsız
+    // repository örneğini kurar — paylaşılan `repository` (setUp'ta
+    // offline kurulan) kullanılmaz.
+    test('remote kaydı localden daha yeniyse yerel güncellenir', () async {
+      final localModel = _model(syncStatus: SyncStatusLocal.synced)
+        ..localUpdatedAt = DateTime(2026, 1, 1);
+      final remoteModel = _model(syncStatus: SyncStatusLocal.synced)
+        ..title = 'Uzaktan güncellendi'
+        ..updatedAt = DateTime(2026, 1, 5);
+
+      when(() => connectivity.isConnected).thenAnswer((_) async => true);
+      when(() => remote.fetchAllTasks()).thenAnswer((_) async => [remoteModel]);
+      when(() => local.getByTaskId('t1')).thenAnswer((_) async => localModel);
+      when(() => local.putTask(any())).thenAnswer((_) async {});
+
+      TaskRepositoryImpl(local, remote, connectivity);
+      await Future<void>.delayed(Duration.zero);
+      await Future<void>.delayed(Duration.zero);
+
+      verify(() => local.putTask(remoteModel)).called(1);
+    });
+
+    test('yereldeki pending değişiklik remote eskiyse EZİLMEZ', () async {
+      final localModel = _model(syncStatus: SyncStatusLocal.pendingUpdate)
+        ..title = 'Henüz gönderilmemiş yerel değişiklik'
+        ..localUpdatedAt = DateTime(2026, 1, 10);
+      final remoteModel = _model(syncStatus: SyncStatusLocal.synced)
+        ..updatedAt = DateTime(2026, 1, 1);
+
+      when(() => connectivity.isConnected).thenAnswer((_) async => true);
+      when(() => remote.fetchAllTasks()).thenAnswer((_) async => [remoteModel]);
+      when(() => local.getByTaskId('t1')).thenAnswer((_) async => localModel);
+      when(() => local.getPendingSync()).thenAnswer((_) async => []);
+
+      TaskRepositoryImpl(local, remote, connectivity);
+      await Future<void>.delayed(Duration.zero);
+      await Future<void>.delayed(Duration.zero);
+
+      verifyNever(() => local.putTask(remoteModel));
+    });
+
+    test('soft-delete edilmiş yerel kayıt, eski remote sürümüyle geri gelmez', () async {
+      final deletedLocal = _model(syncStatus: SyncStatusLocal.pendingDelete)
+        ..isDeleted = true
+        ..deletedAt = DateTime(2026, 1, 10)
+        ..localUpdatedAt = DateTime(2026, 1, 10);
+      final staleRemote = _model(syncStatus: SyncStatusLocal.synced)
+        ..isDeleted = false
+        ..updatedAt = DateTime(2026, 1, 5);
+
+      when(() => connectivity.isConnected).thenAnswer((_) async => true);
+      when(() => remote.fetchAllTasks()).thenAnswer((_) async => [staleRemote]);
+      when(() => local.getByTaskId('t1')).thenAnswer((_) async => deletedLocal);
+      when(() => local.getPendingSync()).thenAnswer((_) async => []);
+
+      TaskRepositoryImpl(local, remote, connectivity);
+      await Future<void>.delayed(Duration.zero);
+      await Future<void>.delayed(Duration.zero);
+
+      verifyNever(() => local.putTask(staleRemote));
+    });
+  });
+
   group('watchTasks filtreleme', () {
     test('includeCompleted:false iken tamamlanmış görevleri eler', () async {
       final pending = _model(taskId: 'p')..status = TaskStatusLocal.pending;

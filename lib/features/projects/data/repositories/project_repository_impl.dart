@@ -2,6 +2,7 @@ import '../../../../core/errors/failure.dart';
 import '../../../../core/errors/result.dart';
 import '../../../../core/exceptions/app_exceptions.dart';
 import '../../../../core/network/connectivity_service.dart';
+import '../../../../core/sync/syncable_repository.dart';
 import '../../domain/entities/project.dart';
 import '../../domain/repositories/project_repository.dart';
 import '../datasources/local/project_local_datasource.dart';
@@ -13,7 +14,12 @@ import '../models/project_local_model.dart';
 /// `TaskRepositoryImpl` ile birebir aynı desen: her yazma önce Isar'a
 /// (anında, `pendingX` işaretiyle) yazılır, bağlantı varsa arka planda
 /// Firestore'a gönderilir.
-class ProjectRepositoryImpl implements ProjectRepository {
+///
+/// FAZ 14 — `SyncableRepository`'yi de implemente eder. NOT: PRD.md §233/§370
+/// gereği Projects'te manuel silme YOKTUR (yalnızca arşivleme) — bu, FAZ 14
+/// kapsamında da eklenmedi; `syncPending()` yalnızca mevcut pendingCreate/
+/// pendingUpdate akışını flush eder.
+class ProjectRepositoryImpl implements ProjectRepository, SyncableRepository {
   ProjectRepositoryImpl(this._local, this._remote, this._connectivity) {
     unawaited(_syncFromRemote());
   }
@@ -124,12 +130,26 @@ class ProjectRepositoryImpl implements ProjectRepository {
           await _local.putProject(remoteProject);
         }
       }
+      await syncPending();
+    } catch (_) {
+      // Sessiz — bir sonraki repository örneklenmesinde tekrar denenir.
+    }
+  }
+
+  /// FAZ 14 — merkezi `SyncCoordinator` tarafından, bağlantı offline→online
+  /// geçtiğinde çağrılır. Yalnızca yerelde `pending*` durumda kalan projeleri
+  /// Firestore'a göndermeyi dener; `_syncFromRemote` içindeki tek seferlik
+  /// "uzaktan çek + LWW eşle" adımını TEKRARLAMAZ.
+  @override
+  Future<void> syncPending() async {
+    if (!await _connectivity.isConnected) return;
+    try {
       final pending = await _local.getPendingSync();
       for (final model in pending) {
         await _trySyncProject(model);
       }
     } catch (_) {
-      // Sessiz — bir sonraki repository örneklenmesinde tekrar denenir.
+      // Sessiz — pending kayıtlar bir sonraki tetikleyicide tekrar denenir.
     }
   }
 

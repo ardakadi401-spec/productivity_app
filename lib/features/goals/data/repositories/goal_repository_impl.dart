@@ -2,6 +2,7 @@ import '../../../../core/errors/failure.dart';
 import '../../../../core/errors/result.dart';
 import '../../../../core/exceptions/app_exceptions.dart';
 import '../../../../core/network/connectivity_service.dart';
+import '../../../../core/sync/syncable_repository.dart';
 import '../../domain/entities/goal.dart';
 import '../../domain/repositories/goal_repository.dart';
 import '../datasources/local/goal_local_datasource.dart';
@@ -13,7 +14,13 @@ import '../models/goal_local_model.dart';
 /// `TaskRepositoryImpl`/`ProjectRepositoryImpl` ile birebir aynı desen: her
 /// yazma önce Isar'a (anında, `pendingX` işaretiyle) yazılır, bağlantı
 /// varsa arka planda Firestore'a gönderilir.
-class GoalRepositoryImpl implements GoalRepository {
+///
+/// FAZ 14 — `SyncableRepository`'yi de implemente eder. NOT: PRD.md §259-263
+/// gereği Goals'ta manuel silme YOKTUR (yalnızca dönem sonu otomatik
+/// arşivleme/`setGoalStatus`) — bu, FAZ 14 kapsamında da eklenmedi;
+/// `syncPending()` yalnızca mevcut pendingCreate/pendingUpdate akışını
+/// flush eder.
+class GoalRepositoryImpl implements GoalRepository, SyncableRepository {
   GoalRepositoryImpl(this._local, this._remote, this._connectivity) {
     unawaited(_syncFromRemote());
   }
@@ -121,12 +128,26 @@ class GoalRepositoryImpl implements GoalRepository {
           await _local.putGoal(remoteGoal);
         }
       }
+      await syncPending();
+    } catch (_) {
+      // Sessiz — bir sonraki repository örneklenmesinde tekrar denenir.
+    }
+  }
+
+  /// FAZ 14 — merkezi `SyncCoordinator` tarafından, bağlantı offline→online
+  /// geçtiğinde çağrılır. Yalnızca yerelde `pending*` durumda kalan hedefleri
+  /// Firestore'a göndermeyi dener; `_syncFromRemote` içindeki tek seferlik
+  /// "uzaktan çek + LWW eşle" adımını TEKRARLAMAZ.
+  @override
+  Future<void> syncPending() async {
+    if (!await _connectivity.isConnected) return;
+    try {
       final pending = await _local.getPendingSync();
       for (final model in pending) {
         await _trySyncGoal(model);
       }
     } catch (_) {
-      // Sessiz — bir sonraki repository örneklenmesinde tekrar denenir.
+      // Sessiz — pending kayıtlar bir sonraki tetikleyicide tekrar denenir.
     }
   }
 

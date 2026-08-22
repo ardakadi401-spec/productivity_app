@@ -6,14 +6,15 @@ import '../../../../core/theme/theme_mode_provider.dart';
 import '../../../../shared/buttons/app_button_widget.dart';
 import '../../../../shared/components/app_secondary_tab_bar.dart';
 import '../../../../shared/components/app_top_bar.dart';
-import '../../../../shared/widgets/empty_state_widget.dart';
 import '../../../goals/presentation/pages/goals_list_page.dart';
 import '../../../goals/presentation/widgets/create_goal_sheet.dart';
+import '../../../habits/presentation/pages/habits_list_page.dart';
+import '../../../habits/presentation/widgets/create_habit_sheet.dart';
 
 /// Tab 4 — Habits/Goals — SCREENS.md §2.4, §3.2: tek shell branch, içinde
 /// "Alışkanlıklar"/"Hedefler" ikincil sekmesi. `/habits` ve `/goals` aynı
-/// sayfaya farklı başlangıç sekmesiyle açılır. Hedefler sekmesi FAZ 8 ile
-/// gerçek veriye bağlandı; Alışkanlıklar FAZ 9'da bağlanacak.
+/// sayfaya farklı başlangıç sekmesiyle açılır. Her iki sekme de gerçek
+/// veriye bağlı (Alışkanlıklar FAZ 9, Hedefler FAZ 8).
 class HabitsGoalsPage extends ConsumerStatefulWidget {
   const HabitsGoalsPage({super.key, this.initialTab = 0});
 
@@ -56,20 +57,24 @@ class _HabitsGoalsPageState extends ConsumerState<HabitsGoalsPage>
             child: TabBarView(
               controller: _controller,
               children: const [
-                EmptyState(icon: Icons.repeat_rounded, message: 'Henüz alışkanlık eklemedin'),
+                HabitsListPage(),
                 GoalsListPage(),
               ],
             ),
           ),
         ],
       ),
-      floatingActionButton: _tabIndex == 1
+      floatingActionButton: _tabIndex == 0
           ? AppFabButton(
+              icon: Icons.add,
+              semanticLabel: 'Yeni Alışkanlık',
+              onPressed: () => showCreateHabitSheet(context),
+            )
+          : AppFabButton(
               icon: Icons.add,
               semanticLabel: 'Yeni Hedef',
               onPressed: () => showCreateGoalSheet(context),
-            )
-          : null,
+            ),
     );
   }
 }

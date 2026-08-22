@@ -12,8 +12,14 @@ import '../../features/calendar/presentation/pages/calendar_page.dart';
 import '../../features/dashboard/presentation/pages/dashboard_page.dart';
 import '../../features/dashboard/presentation/pages/habits_goals_page.dart';
 import '../../features/dashboard/presentation/pages/projects_tasks_page.dart';
+import '../../features/habits/presentation/pages/habit_detail_page.dart';
+import '../../features/notes/presentation/pages/note_detail_page.dart';
+import '../../features/notes/presentation/pages/notes_list_page.dart';
+import '../../features/pomodoro/presentation/pages/pomodoro_page.dart';
 import '../../features/projects/presentation/pages/project_detail_page.dart';
+import '../../features/search/presentation/pages/search_page.dart';
 import '../../features/settings/presentation/pages/settings_page.dart';
+import '../../features/statistics/presentation/pages/statistics_page.dart';
 import '../../features/tasks/domain/entities/task.dart';
 import '../../features/tasks/presentation/pages/create_task_page.dart';
 import '../../features/tasks/presentation/pages/edit_task_page.dart';
@@ -125,12 +131,33 @@ final routerProvider = Provider<GoRouter>((ref) {
           initialTask: state.extra as Task?,
         ),
       ),
-      _placeholderRoute(RoutePaths.habitDetail),
-      _placeholderRoute(RoutePaths.pomodoro),
-      _placeholderRoute(RoutePaths.notes),
-      _placeholderRoute(RoutePaths.noteDetail),
-      _placeholderRoute(RoutePaths.statistics),
-      _placeholderRoute(RoutePaths.search),
+      GoRoute(
+        path: RoutePaths.habitDetail,
+        builder: (context, state) =>
+            HabitDetailPage(habitId: state.pathParameters['habitId']!),
+      ),
+      GoRoute(
+        path: RoutePaths.pomodoro,
+        // Task Detail'in "Pomodoro ile Çalış" eylemi görev önceden seçili
+        // olacak şekilde `extra` ile `taskId` iletir (SCREENS.md §4.10).
+        builder: (context, state) => PomodoroPage(initialTaskId: state.extra as String?),
+      ),
+      GoRoute(path: RoutePaths.notes, builder: (context, state) => const NotesListPage()),
+      GoRoute(
+        path: RoutePaths.createNote,
+        // Project Detail / Task Detail'in "Not Ekle" eylemi proje/görev
+        // önceden bağlı `extra` ile `CreateNoteArgs` iletir (SCREENS.md §4.8/§4.10).
+        builder: (context, state) {
+          final args = state.extra as CreateNoteArgs?;
+          return NoteDetailPage(initialProjectId: args?.projectId, initialTaskId: args?.taskId);
+        },
+      ),
+      GoRoute(
+        path: RoutePaths.noteDetail,
+        builder: (context, state) => NoteDetailPage(noteId: state.pathParameters['noteId']!),
+      ),
+      GoRoute(path: RoutePaths.statistics, builder: (context, state) => const StatisticsPage()),
+      GoRoute(path: RoutePaths.search, builder: (context, state) => const SearchPage()),
       _placeholderRoute(RoutePaths.profile),
       // Shell dışı bağımsız rota — ARCHITECTURE.md §9.3, tam işlevi FAZ 15'te.
       _placeholderRoute(RoutePaths.lock),

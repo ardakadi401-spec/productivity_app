@@ -4,6 +4,7 @@ import '../../../../core/errors/result.dart';
 import '../../domain/entities/sub_task.dart';
 import '../../domain/entities/task.dart';
 import '../providers/task_providers.dart';
+import '../utils/sync_task_reminder_safely.dart';
 
 /// Task Detail Screen (SCREENS.md §4.10) — görev + alt görev listesini
 /// Isar'ın reaktif stream'inden okur; alt görev eklendiğinde/tamamlandığında
@@ -19,11 +20,14 @@ class TaskDetailController extends AutoDisposeFamilyStreamNotifier<Task?, String
   Future<Result<void>> toggleCompleted({required bool isCompleted}) async {
     final result =
         await ref.read(completeTaskUseCaseProvider).call(arg, isCompleted: isCompleted);
+    if (result case Ok(:final value)) syncTaskReminderSafely(ref, value);
     return _toVoid(result);
   }
 
-  Future<Result<void>> deleteTask() {
-    return ref.read(deleteTaskUseCaseProvider).call(arg);
+  Future<Result<void>> deleteTask() async {
+    final result = await ref.read(deleteTaskUseCaseProvider).call(arg);
+    if (result case Ok()) cancelTaskReminderSafely(ref, arg);
+    return result;
   }
 
   Future<Result<void>> addSubTask(String title) async {

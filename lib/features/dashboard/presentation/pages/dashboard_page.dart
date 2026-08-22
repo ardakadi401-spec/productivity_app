@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/errors/failure.dart';
+import '../../../../core/errors/result.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_theme_mode.dart';
@@ -12,14 +13,20 @@ import '../../../../routes/route_paths/route_paths.dart';
 import '../../../../shared/buttons/app_button_widget.dart';
 import '../../../../shared/components/app_top_bar.dart';
 import '../../../../shared/components/goal_card_widget.dart';
+import '../../../../shared/components/habit_card_widget.dart';
+import '../../../../shared/components/sync_status_indicator_widget.dart';
 import '../../../../shared/components/task_card_widget.dart';
 import '../../../../shared/dialogs/app_bottom_sheet.dart';
 import '../../../../shared/loaders/loading_skeleton_widget.dart';
+import '../../../../shared/widgets/app_snackbar_widget.dart';
 import '../../../../shared/widgets/empty_state_widget.dart';
 import '../../../../shared/widgets/error_state_widget.dart';
 import '../../../goals/presentation/providers/goal_providers.dart';
 import '../../../goals/presentation/utils/goal_card_mapping.dart';
 import '../../../goals/presentation/widgets/edit_goal_sheet.dart';
+import '../../../habits/presentation/providers/habit_providers.dart';
+import '../../../habits/presentation/utils/habit_frequency_label.dart';
+import '../../../habits/presentation/utils/habit_icon_options.dart';
 import '../../../tasks/presentation/providers/task_providers.dart';
 import '../../../tasks/presentation/utils/task_priority_mapping.dart';
 
@@ -63,6 +70,8 @@ class DashboardPage extends ConsumerWidget {
                   _greeting(now),
                   style: AppTypography.display.copyWith(color: theme.colorScheme.onSurface),
                 ),
+                const SizedBox(height: AppSpacing.xs),
+                const SyncStatusIndicatorWidget(),
                 const SizedBox(height: AppSpacing.lg),
                 _SectionHeader(
                   title: 'Bugünkü Görevler',
@@ -76,12 +85,7 @@ class DashboardPage extends ConsumerWidget {
                   actionLabel: 'Tümünü Gör',
                   onAction: () => context.go(RoutePaths.habits),
                 ),
-                EmptyState(
-                  icon: Icons.repeat_rounded,
-                  message: 'Henüz alışkanlık eklemedin',
-                  actionLabel: 'Alışkanlık Ekle',
-                  onAction: () => context.go(RoutePaths.habits),
-                ),
+                const _TodayHabitsSection(),
                 const SizedBox(height: AppSpacing.lg),
                 _SectionHeader(
                   title: 'Haftalık İlerleme',
@@ -135,7 +139,7 @@ class DashboardPage extends ConsumerWidget {
                       child: AppButton(
                         label: 'Yeni Not',
                         variant: AppButtonVariant.outline,
-                        onPressed: () => context.push(RoutePaths.notes),
+                        onPressed: () => context.push(RoutePaths.createNote),
                       ),
                     ),
                     const SizedBox(width: AppSpacing.sm),
@@ -295,6 +299,81 @@ class _FeaturedGoalSection extends ConsumerWidget {
           progressRatio: progress,
           onTap: () => AppBottomSheet.show<void>(context, child: EditGoalSheet(goal: goal)),
         );
+      },
+    );
+  }
+}
+
+/// Dashboard'un "Alışkanlıklar" bölümü (SCREENS.md §5, sıra 3: "Bugün için
+/// tanımlı tüm alışkanlıklar, yatay kaydırılabilir liste") — ROADMAP.md
+/// FAZ 9 "Dashboard entegrasyonu". Dashboard'un kendi Repository'si yoktur;
+/// yalnızca Habits'in dışa açık `todayHabitsProvider`'ını okur.
+class _TodayHabitsSection extends ConsumerWidget {
+  const _TodayHabitsSection();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final habitsAsync = ref.watch(todayHabitsProvider);
+
+    return habitsAsync.when(
+      loading: () => const LoadingSkeleton(height: 88, borderRadius: 16),
+      error: (error, _) {
+        final message = error is Failure ? error.message : 'Alışkanlıklar yüklenemedi.';
+        return ErrorState(message: message, onRetry: () => ref.invalidate(todayHabitsProvider));
+      },
+      data: (habits) {
+        if (habits.isEmpty) {
+          return EmptyState(
+            icon: Icons.repeat_rounded,
+            message: 'Henüz alışkanlık eklemedin',
+            actionLabel: 'Alışkanlık Ekle',
+            onAction: () => context.go(RoutePaths.habits),
+          );
+        }
+        return SizedBox(
+          height: 96,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemCount: habits.length,
+            separatorBuilder: (_, _) => const SizedBox(width: AppSpacing.sm),
+            itemBuilder: (context, index) {
+              final habit = habits[index];
+              return SizedBox(width: 260, child: _DashboardHabitCard(habitId: habit.habitId));
+            },
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _DashboardHabitCard extends ConsumerWidget {
+  const _DashboardHabitCard({required this.habitId});
+
+  final String habitId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final habit = ref.watch(habitDetailProvider(habitId)).valueOrNull;
+    if (habit == null) return const SizedBox.shrink();
+    final isCompletedToday = ref.watch(habitTodayCheckInProvider(habitId)).valueOrNull ?? false;
+    final today = DateTime.now();
+
+    return HabitCardWidget(
+      title: habit.name,
+      icon: habitIconFor(habit.icon),
+      frequencySummary: habitFrequencySummary(habit),
+      currentStreak: habit.currentStreak,
+      isCompletedToday: isCompletedToday,
+      isScheduledToday: habit.isScheduledOn(today),
+      onTap: () => context.push(RoutePaths.habitDetail.replaceFirst(':habitId', habitId)),
+      onCompletionChanged: (value) async {
+        final result =
+            await ref.read(checkInHabitUseCaseProvider).call(habitId, today, isCompleted: value);
+        if (!context.mounted) return;
+        if (result case Err(:final failure)) {
+          AppSnackbar.show(context, message: failure.message);
+        }
       },
     );
   }

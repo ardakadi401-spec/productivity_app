@@ -28,6 +28,7 @@ class RoutePaths {
   static const String habitDetail = '/habits/:habitId';
   static const String pomodoro = '/pomodoro';
   static const String notes = '/notes';
+  static const String createNote = '/notes/new';
   static const String noteDetail = '/notes/:noteId';
   static const String statistics = '/statistics';
   static const String search = '/search';

@@ -1,4 +1,11 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- ROADMAP.md FAZ 13 — Yerel bildirim izinleri (görev/alışkanlık/pomodoro
+         hatırlatmaları). `SCHEDULE_EXACT_ALARM` tercih edilir (`USE_EXACT_ALARM`
+         değil) — ikincisi Play Store tarafından yalnızca alarm/takvim
+         uygulamaları kategorisine izin verilir, bu bir üretkenlik uygulaması. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/>
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
     <application
         android:label="productivity_app"
         android:name="${applicationName}"
@@ -30,6 +37,20 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+        <!-- ROADMAP.md FAZ 13 — flutter_local_notifications'ın kendi planlanmış
+             bildirim teslim/yeniden-kurulum receiver'ları. Boot receiver, cihaz
+             yeniden başlatıldığında plugin'in kendi kalıcı deposundan planlanmış
+             bildirimleri otomatik geri kurar (uygulama tarafındaki
+             `RescheduleAllNotificationsUseCase`'e ek, birinci savunma hattı). -->
+        <receiver android:exported="false" android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationReceiver" />
+        <receiver android:exported="false" android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationBootReceiver">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED"/>
+                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
+                <action android:name="com.htc.intent.action.QUICKBOOT_POWERON"/>
+            </intent-filter>
+        </receiver>
     </application>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and

@@ -152,6 +152,44 @@ void main() {
     });
   });
 
+  group('syncPending — FAZ 14 (SyncCoordinator giriş noktası)', () {
+    test('offline durumda hiçbir şey yapmaz', () async {
+      await Future<void>.delayed(Duration.zero);
+
+      await repository.syncPending();
+
+      verifyNever(() => remote.setGoal(any()));
+    });
+
+    test('pendingUpdate kaydını online olduğunda gönderir ve synced yapar', () async {
+      await Future<void>.delayed(Duration.zero);
+      when(() => connectivity.isConnected).thenAnswer((_) async => true);
+      final pendingModel = _model(syncStatus: GoalSyncStatusLocal.pendingUpdate);
+      when(() => local.getPendingSync()).thenAnswer((_) async => [pendingModel]);
+      when(() => remote.setGoal(any())).thenAnswer((_) async {});
+      when(() => local.putGoal(any())).thenAnswer((_) async {});
+
+      await repository.syncPending();
+
+      verify(() => remote.setGoal(pendingModel)).called(1);
+      final captured = verify(() => local.putGoal(captureAny())).captured.single as GoalLocalModel;
+      expect(captured.syncStatus, GoalSyncStatusLocal.synced);
+    });
+
+    test('remote gönderimi hata verirse kayıt pending kalır', () async {
+      await Future<void>.delayed(Duration.zero);
+      when(() => connectivity.isConnected).thenAnswer((_) async => true);
+      final pendingModel = _model(syncStatus: GoalSyncStatusLocal.pendingUpdate);
+      when(() => local.getPendingSync()).thenAnswer((_) async => [pendingModel]);
+      when(() => remote.setGoal(any())).thenThrow(const NetworkException('boom'));
+
+      await repository.syncPending();
+
+      verifyNever(() => local.putGoal(any()));
+      expect(pendingModel.syncStatus, GoalSyncStatusLocal.pendingUpdate);
+    });
+  });
+
   group('watchGoals filtreleme', () {
     test('periodType verilmezse tüm hedefleri döner', () async {
       final daily = _model(goalId: 'd');

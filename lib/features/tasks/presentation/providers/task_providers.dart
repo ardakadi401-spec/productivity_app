@@ -2,6 +2,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/network/connectivity_service.dart';
 import '../../../../core/storage/isar_provider.dart';
+import '../../../notification/presentation/providers/notification_providers.dart';
+import '../../../settings/presentation/providers/settings_providers.dart';
 import '../../domain/entities/sub_task.dart';
 import '../../domain/entities/task.dart';
 import '../../domain/entities/task_filter.dart';
@@ -13,6 +15,7 @@ import '../../domain/usecases/create_task_usecase.dart';
 import '../../domain/usecases/delete_task_usecase.dart';
 import '../../domain/usecases/get_today_tasks_usecase.dart';
 import '../../domain/usecases/recalculate_task_progress_usecase.dart';
+import '../../domain/usecases/sync_task_reminder_usecase.dart';
 import '../../domain/usecases/update_task_usecase.dart';
 import '../../domain/usecases/watch_sub_tasks_usecase.dart';
 import '../../domain/usecases/watch_task_usecase.dart';
@@ -87,6 +90,16 @@ final completeSubTaskUseCaseProvider = Provider<CompleteSubTaskUseCase>((ref) {
 
 final recalculateTaskProgressUseCaseProvider = Provider<RecalculateTaskProgressUseCase>((ref) {
   return RecalculateTaskProgressUseCase(ref.watch(taskRepositoryProvider));
+});
+
+/// ARCHITECTURE.md §10.2 — Tasks; Settings VE Notification Domain'ine tek
+/// yönlü bağımlıdır (ROADMAP.md FAZ 13).
+final syncTaskReminderUseCaseProvider = Provider<SyncTaskReminderUseCase>((ref) {
+  return SyncTaskReminderUseCase(
+    ref.watch(watchNotificationPreferencesUseCaseProvider),
+    ref.watch(scheduleNotificationUseCaseProvider),
+    ref.watch(cancelNotificationUseCaseProvider),
+  );
 });
 
 // --- Presentation katmanı — reaktif okuma provider'ları ---

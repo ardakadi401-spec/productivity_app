@@ -2,7 +2,14 @@ import 'package:isar_community/isar.dart';
 import 'package:path_provider/path_provider.dart';
 
 import '../../features/goals/data/models/goal_local_model.dart';
+import '../../features/habits/data/models/habit_local_model.dart';
+import '../../features/habits/data/models/habit_record_local_model.dart';
+import '../../features/notes/data/models/note_local_model.dart';
+import '../../features/pomodoro/data/models/pomodoro_session_local_model.dart';
 import '../../features/projects/data/models/project_local_model.dart';
+import '../../features/settings/data/models/settings_local_model.dart';
+import '../../features/statistics/data/models/statistics_snapshot_local_model.dart';
+import '../../features/tags/data/models/tag_local_model.dart';
 import '../../features/tasks/data/models/sub_task_local_model.dart';
 import '../../features/tasks/data/models/task_local_model.dart';
 
@@ -21,7 +28,19 @@ class IsarService {
   static Future<Isar> open() async {
     final dir = await getApplicationDocumentsDirectory();
     return Isar.open(
-      [TaskLocalModelSchema, SubTaskLocalModelSchema, ProjectLocalModelSchema, GoalLocalModelSchema],
+      [
+        TaskLocalModelSchema,
+        SubTaskLocalModelSchema,
+        ProjectLocalModelSchema,
+        GoalLocalModelSchema,
+        HabitLocalModelSchema,
+        HabitRecordLocalModelSchema,
+        NoteLocalModelSchema,
+        TagLocalModelSchema,
+        PomodoroSessionLocalModelSchema,
+        StatisticsSnapshotLocalModelSchema,
+        SettingsLocalModelSchema,
+      ],
       directory: dir.path,
     );
   }

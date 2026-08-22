@@ -39,10 +39,38 @@
       "PowerShell(Get-Service -Name \"aehd\" -ErrorAction SilentlyContinue)",
       "PowerShell(sc.exe query aehd 2>&1)",
       "PowerShell(flutter run -d emulator-5554 --release 2>&1)",
-      "PowerShell(flutter run -d emulator-5554)"
+      "PowerShell(flutter run -d emulator-5554)",
+      "Bash(cd \"/c/Users/ardak/Desktop/Uygulama Proje/productivity_app\" && grep -n \"2026-1-1\" test/features/habits/data/habit_repository_impl_test.dart)",
+      "Bash(sed -i \"s/'2026-1-1'/'2026-01-01'/g\" test/features/habits/data/habit_repository_impl_test.dart)",
+      "Bash(cd \"/c/Users/ardak/Desktop/Uygulama Proje/productivity_app\" && flutter test test/features/habits/ 2>&1 | tail -100)",
+      "Bash(cd \"/c/Users/ardak/Desktop/Uygulama Proje/productivity_app\" && flutter test test/features/habits/data/habit_repository_impl_test.dart 2>&1 | tail -40)",
+      "Bash(cd \"/c/Users/ardak/Desktop/Uygulama Proje/productivity_app\" && flutter test test/features/habits/presentation/ 2>&1 | tail -60)",
+      "Bash(cd \"/c/Users/ardak/Desktop/Uygulama Proje/productivity_app\" && flutter test test/features/habits/presentation/ 2>&1 | tail -30)",
+      "Bash(cd \"/c/Users/ardak/Desktop/Uygulama Proje/productivity_app\" && flutter analyze 2>&1 | tail -5)",
+      "Bash(cd \"/c/Users/ardak/Desktop/Uygulama Proje/productivity_app\" && flutter test 2>&1 | tail -20)",
+      "Bash(cd \"/c/Users/ardak/Desktop/Uygulama Proje/productivity_app\" && flutter build apk --debug 2>&1 | tail -40)",
+      "Bash(grep -n \"^## FAZ\" \"/c/Users/ardak/Desktop/Uygulama Proje/productivity_app/docs/ROADMAP.md\")",
+      "Read(//c/Users/ardak/Desktop/Uygulama Proje/productivity_app/docs/**)",
+      "Bash(grep -n \"6.11\\\\|Zengin metin\" \"/c/Users/ardak/Desktop/Uygulama Proje/productivity_app/docs/PRD.md\")",
+      "Bash(cd \"/c/Users/ardak/Desktop/Uygulama Proje/productivity_app\" && dart run build_runner build 2>&1 | tail -40)",
+      "Bash(cd \"/c/Users/ardak/Desktop/Uygulama Proje/productivity_app\" && flutter analyze lib/features/notes lib/features/tags lib/services/database_service 2>&1 | grep -v experimental_member_use)",
+      "Bash(xargs -I{} echo {})",
+      "Bash(cd \"c:\\\\Users\\\\ardak\\\\Desktop\\\\Uygulama Proje\\\\productivity_app\" && find / -path \"*/flutter_local_notifications-*/lib/src/flutter_local_notifications_plugin.dart\" 2>/dev/null | head -1)",
+      "Read(//c//**)",
+      "Read(//c/Users/ardak/AppData/Local/Pub/Cache/hosted/pub.dev/flutter_local_notifications-22.2.0/lib/src/**)",
+      "Read(//c/Users/ardak/AppData/Local/Pub/Cache/hosted/pub.dev/flutter_timezone-5.1.0/lib/**)",
+      "Bash(find \"C:\\\\Users\\\\ardak\\\\AppData\\\\Local\\\\Pub\\\\Cache\\\\hosted\\\\pub.dev\\\\flutter_local_notifications-22.2.0\" -iname \"AndroidManifest.xml\" 2>/dev/null)",
+      "Read(//c/Users/ardak/AppData/Local/Pub/Cache/hosted/pub.dev/flutter_local_notifications-22.2.0/**)",
+      "Bash(grep -n \"6\\\\.8\\\\|[Hh]edef.*sil\\\\|[Gg]oal.*sil\" \"docs/PRD.md\" | head -20 *)",
+      "Read(//tmp/**)",
+      "Read(//c/Users/ardak/AppData/Local/Pub/Cache/**)",
+      "Read(//c/Users/ardak/**)",
+      "Read(//c/Users/ardak/AppData/Local/Pub/Cache/hosted/pub.dev/flutter_riverpod-2.6.1/lib/src/**)",
+      "Bash(git status *)"
     ],
     "additionalDirectories": [
-      "C:\\Users\\ardak\\Desktop\\Uygulama Proje\\productivity_app\\lib\\app"
+      "C:\\Users\\ardak\\Desktop\\Uygulama Proje\\productivity_app\\lib\\app",
+      "C:\\Users\\ardak\\Desktop\\Uygulama Proje\\productivity_app\\docs"
     ]
   }
 }

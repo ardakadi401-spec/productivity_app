@@ -9,7 +9,6 @@ import 'package:productivity_app/features/tasks/domain/entities/task.dart';
 import 'package:productivity_app/features/tasks/domain/entities/task_filter.dart';
 import 'package:productivity_app/features/tasks/domain/repositories/task_repository.dart';
 import 'package:productivity_app/features/tasks/presentation/providers/task_providers.dart';
-import 'package:productivity_app/routes/route_paths/route_paths.dart';
 import 'package:productivity_app/shared/components/app_bottom_nav_bar.dart';
 
 import '../features/authentication/fake_auth_repository.dart';
@@ -113,7 +112,10 @@ void main() {
     await tester.tap(find.byIcon(Icons.search));
     await tester.pumpAndSettle();
 
-    expect(find.text(RoutePaths.search), findsOneWidget);
+    // FAZ 12 ile Search Screen gerçek ekranına bağlandı — artık placeholder
+    // route metni yerine gerçek arama alanı doğrulanır ("Ara" hem AppBar
+    // başlığında hem alan etiketinde göründüğünden hint metni kullanılır).
+    expect(find.text('Görev, proje, not, alışkanlık ara'), findsOneWidget);
   });
 
   testWidgets('Settings tema seçici gerçekten temayı değiştiriyor', (tester) async {

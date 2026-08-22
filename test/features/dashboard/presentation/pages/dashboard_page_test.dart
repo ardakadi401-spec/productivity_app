@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:productivity_app/core/theme/app_theme.dart';
 import 'package:productivity_app/features/dashboard/presentation/pages/dashboard_page.dart';
+import 'package:productivity_app/features/habits/presentation/providers/habit_providers.dart';
 import 'package:productivity_app/features/tasks/domain/entities/task.dart';
 import 'package:productivity_app/features/tasks/presentation/providers/task_providers.dart';
 
@@ -31,7 +32,10 @@ void main() {
 
     await tester.pumpWidget(
       ProviderScope(
-        overrides: [todayTasksProvider.overrideWith((ref) => Stream.value(const []))],
+        overrides: [
+          todayTasksProvider.overrideWith((ref) => Stream.value(const [])),
+          todayHabitsProvider.overrideWith((ref) => Stream.value(const [])),
+        ],
         child: MaterialApp(theme: AppTheme.light, home: const DashboardPage()),
       ),
     );

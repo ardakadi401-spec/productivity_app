@@ -5,6 +5,19 @@ final connectivityServiceProvider = Provider<ConnectivityService>((ref) {
   return ConnectivityService();
 });
 
+/// Bağlantı durumunu Riverpod `StreamProvider` üzerinden yayınlar
+/// (STATE_MANAGEMENT.md §7.3 — `connectivityStatusProvider`). İlk değer
+/// `isConnected` ile tohumlanır, çünkü `onConnectivityChanged` bazı
+/// platformlarda ilk `listen`'da anlık durumu değil yalnızca sonraki
+/// değişiklikleri yayınlar. Bu adımda yalnızca durumu dışa açar; herhangi
+/// bir repository'yi veya senkronizasyon akışını tetiklemez (FAZ 14
+/// kapsamında sonraki bir adımın işidir).
+final connectivityStatusProvider = StreamProvider<bool>((ref) async* {
+  final service = ref.watch(connectivityServiceProvider);
+  yield await service.isConnected;
+  yield* service.onStatusChange;
+});
+
 /// Bağlantı durumu servisi — ARCHITECTURE.md Bölüm 8.3 senkronizasyon
 /// tetikleyicilerinden birinin Core seviyesindeki temel altyapısı.
 ///

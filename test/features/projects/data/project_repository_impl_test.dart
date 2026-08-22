@@ -178,6 +178,45 @@ void main() {
     });
   });
 
+  group('syncPending — FAZ 14 (SyncCoordinator giriş noktası)', () {
+    test('offline durumda hiçbir şey yapmaz', () async {
+      await Future<void>.delayed(Duration.zero);
+
+      await repository.syncPending();
+
+      verifyNever(() => remote.setProject(any()));
+    });
+
+    test('pendingUpdate kaydını online olduğunda gönderir ve synced yapar', () async {
+      await Future<void>.delayed(Duration.zero);
+      when(() => connectivity.isConnected).thenAnswer((_) async => true);
+      final pendingModel = _model(syncStatus: ProjectSyncStatusLocal.pendingUpdate);
+      when(() => local.getPendingSync()).thenAnswer((_) async => [pendingModel]);
+      when(() => remote.setProject(any())).thenAnswer((_) async {});
+      when(() => local.putProject(any())).thenAnswer((_) async {});
+
+      await repository.syncPending();
+
+      verify(() => remote.setProject(pendingModel)).called(1);
+      final captured =
+          verify(() => local.putProject(captureAny())).captured.single as ProjectLocalModel;
+      expect(captured.syncStatus, ProjectSyncStatusLocal.synced);
+    });
+
+    test('remote gönderimi hata verirse kayıt pending kalır', () async {
+      await Future<void>.delayed(Duration.zero);
+      when(() => connectivity.isConnected).thenAnswer((_) async => true);
+      final pendingModel = _model(syncStatus: ProjectSyncStatusLocal.pendingUpdate);
+      when(() => local.getPendingSync()).thenAnswer((_) async => [pendingModel]);
+      when(() => remote.setProject(any())).thenThrow(const NetworkException('boom'));
+
+      await repository.syncPending();
+
+      verifyNever(() => local.putProject(any()));
+      expect(pendingModel.syncStatus, ProjectSyncStatusLocal.pendingUpdate);
+    });
+  });
+
   group('watchProjects filtreleme', () {
     test('status verilmezse tüm projeleri döner', () async {
       final active = _model(projectId: 'a');

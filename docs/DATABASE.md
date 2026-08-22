@@ -99,7 +99,10 @@ Kullanıcının kimlik ve profil bilgilerini, uygulama genelindeki tercihlerini 
 | `themeMode` | string (enum: `light`, `dark`, `amoled`, `system`) | UI_GUIDELINES.md Bölüm 12 ile uyumlu tema tercihi |
 | `appLockEnabled` | boolean | PIN/Biyometri kilidinin aktif olup olmadığı |
 | `appLockType` | string (enum: `pin`, `biometric`, `both`, `none`) | Aktif kilit türü |
-| `notificationsEnabled` | boolean | Genel bildirim ana anahtarı |
+| `notificationsEnabled` | boolean | Genel bildirim ana anahtarı — kapalıysa hiçbir tür bildirim planlanmaz (tür bazlı anahtarlar kontrol edilmez bile) |
+| `taskRemindersEnabled` | boolean | Görev son tarihi/saati hatırlatmaları (FAZ 13) — yalnızca `notificationsEnabled: true` iken etkilidir |
+| `habitRemindersEnabled` | boolean | Alışkanlık hatırlatmaları (FAZ 13) — yalnızca `notificationsEnabled: true` iken etkilidir |
+| `pomodoroNotificationsEnabled` | boolean | Pomodoro oturum bitiş bildirimi (FAZ 13) — yalnızca `notificationsEnabled: true` iken etkilidir |
 | `pomodoroWorkDuration` | number (dakika) | Varsayılan Pomodoro çalışma süresi |
 | `pomodoroBreakDuration` | number (dakika) | Varsayılan Pomodoro mola süresi |
 | `weekStartDay` | string (enum: `monday`, `sunday`) | Takvim/haftalık hedef hesaplama başlangıcı |

@@ -5,6 +5,7 @@ import '../../domain/entities/sub_task.dart';
 import '../../domain/entities/task.dart';
 import '../providers/task_providers.dart';
 import '../states/task_form_state.dart';
+import '../utils/sync_task_reminder_safely.dart';
 
 /// Project Detail Screen'den "Görev Ekle" ile proje önceden seçili
 /// (SCREENS.md §4.8), Calendar Screen'den "Bu Güne Görev Ekle" ile tarih
@@ -76,6 +77,7 @@ class CreateTaskController extends AutoDisposeFamilyNotifier<TaskFormState, Crea
     switch (result) {
       case Ok(:final value):
         await _createDraftSubTasks(value.taskId);
+        syncTaskReminderSafely(ref, value);
         state = state.copyWith(isSaving: false);
         return result;
       case Err(:final failure):

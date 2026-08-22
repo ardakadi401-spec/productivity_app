@@ -4,6 +4,7 @@ import '../../../../core/errors/result.dart';
 import '../../domain/entities/task.dart';
 import '../../domain/entities/task_filter.dart';
 import '../providers/task_providers.dart';
+import '../utils/sync_task_reminder_safely.dart';
 
 /// Tasks Screen (SCREENS.md §4.9) — STATE_MANAGEMENT.md §5.1: `family`
 /// modifier ile aktif filtreye göre, Isar'ın reaktif stream'ine doğrudan
@@ -20,14 +21,19 @@ class TaskListController extends AutoDisposeFamilyStreamNotifier<List<Task>, Tas
   Future<Result<void>> toggleCompleted(String taskId, {required bool isCompleted}) async {
     final result =
         await ref.read(completeTaskUseCaseProvider).call(taskId, isCompleted: isCompleted);
-    return switch (result) {
-      Ok() => const Ok(null),
-      Err(:final failure) => Err(failure),
-    };
+    switch (result) {
+      case Ok(:final value):
+        syncTaskReminderSafely(ref, value);
+        return const Ok(null);
+      case Err(:final failure):
+        return Err(failure);
+    }
   }
 
-  Future<Result<void>> deleteTask(String taskId) {
-    return ref.read(deleteTaskUseCaseProvider).call(taskId);
+  Future<Result<void>> deleteTask(String taskId) async {
+    final result = await ref.read(deleteTaskUseCaseProvider).call(taskId);
+    if (result case Ok()) cancelTaskReminderSafely(ref, taskId);
+    return result;
   }
 }
 

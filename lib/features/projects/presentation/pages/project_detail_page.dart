@@ -10,6 +10,7 @@ import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/color_hex.dart';
 import '../../../../routes/route_paths/route_paths.dart';
 import '../../../../shared/buttons/app_button_widget.dart';
+import '../../../../shared/components/note_card_widget.dart';
 import '../../../../shared/components/priority_badge_widget.dart';
 import '../../../../shared/components/project_color_badge_widget.dart';
 import '../../../../shared/components/task_card_widget.dart';
@@ -19,6 +20,9 @@ import '../../../../shared/loaders/loading_skeleton_widget.dart';
 import '../../../../shared/widgets/app_snackbar_widget.dart';
 import '../../../../shared/widgets/empty_state_widget.dart';
 import '../../../../shared/widgets/error_state_widget.dart';
+import '../../../notes/presentation/pages/note_detail_page.dart';
+import '../../../notes/presentation/utils/note_preview_text.dart';
+import '../../../notes/presentation/providers/note_providers.dart';
 import '../../../tasks/domain/entities/task.dart';
 import '../../../tasks/presentation/pages/create_task_page.dart';
 import '../../domain/entities/project.dart';
@@ -130,6 +134,7 @@ class _ProjectDetailBody extends ConsumerWidget {
     final tokens = theme.extension<AppColorsExtension>()!;
     final statsAsync = ref.watch(projectTaskStatsProvider(project.projectId));
     final tasksAsync = ref.watch(projectTasksProvider(project.projectId));
+    final notesAsync = ref.watch(notesByProjectProvider(project.projectId));
 
     final taskCount = statsAsync.valueOrNull?.taskCount ?? project.taskCount;
     final completedTaskCount = statsAsync.valueOrNull?.completedTaskCount ?? project.completedTaskCount;
@@ -218,6 +223,54 @@ class _ProjectDetailBody extends ConsumerWidget {
                     completedSubtaskCount: task.completedSubtaskCount,
                     onTap: () =>
                         context.push(RoutePaths.taskDetail.replaceFirst(':taskId', task.taskId)),
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                ],
+              ],
+            );
+          },
+        ),
+        const SizedBox(height: AppSpacing.lg),
+        Row(
+          children: [
+            Text('Notlar', style: AppTypography.h3.copyWith(color: theme.colorScheme.onSurface)),
+            const Spacer(),
+            AppButton(
+              label: 'Not Ekle',
+              variant: AppButtonVariant.text,
+              onPressed: () => context.push(
+                RoutePaths.createNote,
+                extra: CreateNoteArgs(projectId: project.projectId),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        notesAsync.when(
+          loading: () => const LoadingSkeleton(height: 64, borderRadius: 16),
+          error: (error, _) => const SizedBox.shrink(),
+          data: (notes) {
+            if (notes.isEmpty) {
+              return EmptyState(
+                icon: Icons.sticky_note_2_outlined,
+                message: 'Bu projeye bağlı not yok',
+                actionLabel: 'Not Ekle',
+                onAction: () => context.push(
+                  RoutePaths.createNote,
+                  extra: CreateNoteArgs(projectId: project.projectId),
+                ),
+              );
+            }
+            return Column(
+              children: [
+                for (final note in notes) ...[
+                  NoteCardWidget(
+                    title: note.title,
+                    contentPreview: notePreviewText(note.content),
+                    color: note.color == null ? null : hexToColor(note.color!),
+                    isPinned: note.isPinned,
+                    onTap: () =>
+                        context.push(RoutePaths.noteDetail.replaceFirst(':noteId', note.noteId)),
                   ),
                   const SizedBox(height: AppSpacing.sm),
                 ],

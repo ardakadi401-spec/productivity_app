@@ -4,6 +4,7 @@ import '../../../../core/errors/result.dart';
 import '../../domain/entities/task.dart';
 import '../providers/task_providers.dart';
 import '../states/task_form_state.dart';
+import '../utils/sync_task_reminder_safely.dart';
 
 /// Edit Task Screen (SCREENS.md §4.12) — Create Task ile birebir aynı alan
 /// seti, mevcut değerlerle önceden doldurulmuş. `family` anahtarı olarak
@@ -53,7 +54,8 @@ class EditTaskController extends AutoDisposeFamilyNotifier<TaskFormState, Task> 
 
     final result = await ref.read(updateTaskUseCaseProvider).call(updated);
     switch (result) {
-      case Ok():
+      case Ok(:final value):
+        syncTaskReminderSafely(ref, value);
         state = state.copyWith(isSaving: false);
       case Err(:final failure):
         state = state.copyWith(isSaving: false, error: failure);

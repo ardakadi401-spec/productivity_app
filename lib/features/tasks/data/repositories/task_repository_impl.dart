@@ -2,6 +2,7 @@ import '../../../../core/errors/failure.dart';
 import '../../../../core/errors/result.dart';
 import '../../../../core/exceptions/app_exceptions.dart';
 import '../../../../core/network/connectivity_service.dart';
+import '../../../../core/sync/syncable_repository.dart';
 import '../../domain/entities/sub_task.dart';
 import '../../domain/entities/task.dart';
 import '../../domain/entities/task_filter.dart';
@@ -24,7 +25,13 @@ import '../models/task_local_model.dart';
 /// eklenen alt görevler, bu oturumda ilgili görev detayına gidilene kadar
 /// (o an tetiklenecek FAZ 14 iyileştirmesine kadar) görünmeyebilir; bilinen,
 /// kabul edilmiş bir sınırlama.
-class TaskRepositoryImpl implements TaskRepository {
+///
+/// FAZ 14 ADIM 5 — `SyncableRepository`'yi de implemente eder: merkezi
+/// `SyncCoordinator`, bağlantı offline→online geçtiğinde `syncPending()`'i
+/// çağırabilir. Domain katmanındaki `TaskRepository` arayüzü BİLEREK
+/// değiştirilmedi (Domain, `core/sync/` altyapısından habersiz kalır) —
+/// yalnızca bu somut Data-katmanı implementasyonu ek sözleşmeyi taşır.
+class TaskRepositoryImpl implements TaskRepository, SyncableRepository {
   TaskRepositoryImpl(this._local, this._remote, this._connectivity) {
     unawaited(_syncFromRemote());
   }
@@ -214,7 +221,9 @@ class TaskRepositoryImpl implements TaskRepository {
   }
 
   /// DATABASE.md §12.4 — bir kerelik uzaktan çekme + Last-Write-Wins eşleme,
-  /// ardından yerelde hâlâ `pending*` olan kayıtları göndermeyi dener.
+  /// ardından yerelde hâlâ `pending*` olan kayıtları göndermeyi dener
+  /// (`syncPending()` — bkz. aşağı). Yalnızca constructor'dan, uygulama
+  /// ömrü boyunca BİR KEZ çağrılır; bu ADIM'da değiştirilmedi.
   Future<void> _syncFromRemote() async {
     if (!await _connectivity.isConnected) return;
     try {
@@ -225,12 +234,31 @@ class TaskRepositoryImpl implements TaskRepository {
           await _local.putTask(remoteTask);
         }
       }
+      await syncPending();
+    } catch (_) {
+      // Sessiz — bir sonraki repository örneklenmesinde tekrar denenir.
+    }
+  }
+
+  /// FAZ 14 ADIM 5 — merkezi `SyncCoordinator` tarafından, bağlantı
+  /// offline→online geçtiğinde çağrılır. Yalnızca yerelde `pending*`
+  /// durumda kalan görevleri Firestore'a göndermeyi dener; `_syncFromRemote`
+  /// içindeki tek seferlik "uzaktan çek + LWW eşle" adımını TEKRARLAMAZ (o
+  /// hâlâ yalnızca constructor'da, bir kerelik çalışır — bkz. yukarı).
+  ///
+  /// Bağlantı yoksa güvenle hiçbir şey yapmadan döner. Bir kaydın gönderimi
+  /// başarısız olursa `_trySyncTask` onu sessizce `pending` bırakır — hiçbir
+  /// istisna dışarı fırlatılmaz, coordinator kalıcı olarak etkilenmez.
+  @override
+  Future<void> syncPending() async {
+    if (!await _connectivity.isConnected) return;
+    try {
       final pending = await _local.getPendingSync();
       for (final model in pending) {
         await _trySyncTask(model);
       }
     } catch (_) {
-      // Sessiz — bir sonraki repository örneklenmesinde tekrar denenir.
+      // Sessiz — pending kayıtlar bir sonraki tetikleyicide tekrar denenir.
     }
   }
 

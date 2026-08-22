@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/errors/failure.dart';
 import '../../../../core/errors/result.dart';
+import '../../../../core/extensions/duration_extensions.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -11,6 +12,7 @@ import '../../../../core/utils/color_hex.dart';
 import '../../../../routes/route_paths/route_paths.dart';
 import '../../../../shared/buttons/app_button_widget.dart';
 import '../../../../shared/components/due_date_label_widget.dart';
+import '../../../../shared/components/note_card_widget.dart';
 import '../../../../shared/components/priority_badge_widget.dart';
 import '../../../../shared/components/project_color_badge_widget.dart';
 import '../../../../shared/dialogs/app_bottom_sheet.dart';
@@ -19,6 +21,11 @@ import '../../../../shared/loaders/loading_skeleton_widget.dart';
 import '../../../../shared/widgets/app_snackbar_widget.dart';
 import '../../../../shared/widgets/empty_state_widget.dart';
 import '../../../../shared/widgets/error_state_widget.dart';
+import '../../../notes/presentation/pages/note_detail_page.dart';
+import '../../../notes/presentation/providers/note_providers.dart';
+import '../../../notes/presentation/utils/note_preview_text.dart';
+import '../../../pomodoro/domain/entities/pomodoro_session.dart';
+import '../../../pomodoro/presentation/providers/pomodoro_providers.dart';
 import '../../../projects/presentation/providers/project_providers.dart';
 import '../../domain/entities/sub_task.dart';
 import '../../domain/entities/task.dart';
@@ -133,6 +140,8 @@ class _TaskDetailBody extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final tokens = theme.extension<AppColorsExtension>()!;
+    final notesAsync = ref.watch(notesByTaskProvider(task.taskId));
+    final pomodoroSessionsAsync = ref.watch(pomodoroSessionsByTaskProvider(task.taskId));
 
     return ListView(
       padding: const EdgeInsets.all(AppSpacing.lg),
@@ -183,7 +192,7 @@ class _TaskDetailBody extends ConsumerWidget {
         AppButton(
           label: 'Pomodoro ile Çalış',
           variant: AppButtonVariant.outline,
-          onPressed: () => context.push(RoutePaths.pomodoro),
+          onPressed: () => context.push(RoutePaths.pomodoro, extra: task.taskId),
         ),
         const SizedBox(height: AppSpacing.lg),
         Row(
@@ -245,6 +254,73 @@ class _TaskDetailBody extends ConsumerWidget {
           onPressed: () => _showAddSubTaskSheet(context, controller),
           icon: const Icon(Icons.add),
           label: const Text('Alt Görev Ekle'),
+        ),
+        const SizedBox(height: AppSpacing.lg),
+        Row(
+          children: [
+            Text('Notlar', style: AppTypography.h3.copyWith(color: theme.colorScheme.onSurface)),
+            const Spacer(),
+            AppButton(
+              label: 'Not Ekle',
+              variant: AppButtonVariant.text,
+              onPressed: () =>
+                  context.push(RoutePaths.createNote, extra: CreateNoteArgs(taskId: task.taskId)),
+            ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        notesAsync.when(
+          loading: () => const LoadingSkeleton(height: 64, borderRadius: 16),
+          error: (error, _) => const SizedBox.shrink(),
+          data: (notes) {
+            if (notes.isEmpty) {
+              return EmptyState(
+                icon: Icons.sticky_note_2_outlined,
+                message: 'Bu göreve bağlı not yok',
+                actionLabel: 'Not Ekle',
+                onAction: () =>
+                    context.push(RoutePaths.createNote, extra: CreateNoteArgs(taskId: task.taskId)),
+              );
+            }
+            return Column(
+              children: [
+                for (final note in notes) ...[
+                  NoteCardWidget(
+                    title: note.title,
+                    contentPreview: notePreviewText(note.content),
+                    color: note.color == null ? null : hexToColor(note.color!),
+                    isPinned: note.isPinned,
+                    onTap: () =>
+                        context.push(RoutePaths.noteDetail.replaceFirst(':noteId', note.noteId)),
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                ],
+              ],
+            );
+          },
+        ),
+        const SizedBox(height: AppSpacing.lg),
+        Text('Pomodoro Geçmişi', style: AppTypography.h3.copyWith(color: theme.colorScheme.onSurface)),
+        const SizedBox(height: AppSpacing.sm),
+        pomodoroSessionsAsync.when(
+          loading: () => const LoadingSkeleton(height: 48, borderRadius: 12),
+          error: (error, _) => const SizedBox.shrink(),
+          data: (sessions) {
+            if (sessions.isEmpty) {
+              return EmptyState(
+                icon: Icons.timer_outlined,
+                message: 'Bu göreve bağlı Pomodoro oturumu yok',
+              );
+            }
+            return Column(
+              children: [
+                for (final session in sessions) ...[
+                  _PomodoroSessionRow(session: session),
+                  const SizedBox(height: AppSpacing.xs),
+                ],
+              ],
+            );
+          },
         ),
       ],
     );
@@ -311,6 +387,56 @@ class _LinkedProjectChip extends ConsumerWidget {
           ProjectColorBadge(color: hexToColor(project.color)),
           const SizedBox(width: AppSpacing.xs),
           Text(project.title, style: AppTypography.caption.copyWith(color: tokens.textSecondary)),
+        ],
+      ),
+    );
+  }
+}
+
+/// Pomodoro oturum geçmişi satırı (SCREENS.md §4.10, ROADMAP FAZ 11
+/// tamamlanma kriteri "oturum bir göreve bağlandığında Task Detail
+/// ekranında oturum geçmişi görünüyor" — bu görev bağlı oturumlar zaten
+/// yalnızca `type: work` olduğundan burada ek filtre gerekmez, bkz.
+/// `PomodoroTimerController._advanceToNextPhase` mola oturumlarına taskId
+/// atamama kararı).
+class _PomodoroSessionRow extends StatelessWidget {
+  const _PomodoroSessionRow({required this.session});
+
+  final PomodoroSession session;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final tokens = theme.extension<AppColorsExtension>()!;
+    final date = session.startedAt;
+    final dateLabel =
+        '${date.day.toString().padLeft(2, '0')}.${date.month.toString().padLeft(2, '0')}.${date.year}';
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: tokens.border),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            session.isCompleted ? Icons.check_circle_outline : Icons.cancel_outlined,
+            size: 18,
+            color: session.isCompleted ? theme.colorScheme.primary : tokens.textSecondary,
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Text(
+              '$dateLabel · ${session.actualDuration.mmss}',
+              style: AppTypography.bodyMd.copyWith(color: theme.colorScheme.onSurface),
+            ),
+          ),
+          Text(
+            session.isCompleted ? 'Tamamlandı' : 'Yarıda kaldı',
+            style: AppTypography.caption.copyWith(color: tokens.textSecondary),
+          ),
         ],
       ),
     );
