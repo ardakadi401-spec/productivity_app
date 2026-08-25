@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:productivity_app/core/errors/failure.dart';
 import 'package:productivity_app/core/errors/result.dart';
 import 'package:productivity_app/core/theme/app_theme.dart';
 import 'package:productivity_app/core/theme/app_theme_mode.dart';
@@ -12,8 +13,11 @@ import 'package:productivity_app/features/notification/domain/repositories/notif
 import 'package:productivity_app/features/notification/presentation/providers/notification_providers.dart';
 import 'package:productivity_app/features/settings/domain/entities/notification_preferences.dart';
 import 'package:productivity_app/features/settings/domain/repositories/settings_repository.dart';
+import 'package:productivity_app/features/authentication/presentation/providers/auth_providers.dart';
 import 'package:productivity_app/features/settings/presentation/pages/settings_page.dart';
 import 'package:productivity_app/features/settings/presentation/providers/settings_providers.dart';
+
+import '../../../authentication/fake_auth_repository.dart';
 
 /// ROADMAP.md FAZ 13 — "Settings tercih senaryolarını test et." Gerçek
 /// Isar/Firestore'a dokunmadan `settingsRepositoryProvider`/
@@ -57,6 +61,8 @@ class _FakeNotificationRepository implements NotificationRepository {
   Future<void> initialize() async {}
   @override
   Future<bool> requestPermission() async => permissionGranted;
+  @override
+  Future<bool> areNotificationsEnabled() async => permissionGranted;
   @override
   Future<void> scheduleNotification(NotificationRequest request) async {}
   @override
@@ -117,6 +123,8 @@ void main() {
 
       expect(taskTile().onChanged, isNotNull);
 
+      await tester.ensureVisible(find.widgetWithText(SwitchListTile, 'Bildirimleri Etkinleştir'));
+      await tester.pumpAndSettle();
       await tester.tap(find.widgetWithText(SwitchListTile, 'Bildirimleri Etkinleştir'));
       await tester.pumpAndSettle();
 
@@ -144,6 +152,8 @@ void main() {
         // sürenin ötesine kadar ilerletip SnackBar'ı kaybolmuş halde bırakır.
         // Yalnızca dokunma + async izin kontrolünün tamamlanması için yeterli
         // sayıda tekil `pump()` kullanılır.
+        await tester.ensureVisible(find.widgetWithText(SwitchListTile, 'Bildirimleri Etkinleştir'));
+        await tester.pump();
         await tester.tap(find.widgetWithText(SwitchListTile, 'Bildirimleri Etkinleştir'));
         await tester.pump();
         await tester.pump();
@@ -175,6 +185,125 @@ void main() {
       expect(updated.notificationsEnabled, isTrue);
       expect(updated.taskRemindersEnabled, isTrue);
       expect(updated.pomodoroNotificationsEnabled, isTrue);
+    });
+
+    testWidgets(
+      'tercih içeride açık ama OS izni sistem ayarlarından sonradan kapatılmışsa uyarı gösterilir',
+      (tester) async {
+        final settings = _FakeSettingsRepository(
+          const NotificationPreferences(
+            notificationsEnabled: true,
+            taskRemindersEnabled: true,
+            habitRemindersEnabled: true,
+            pomodoroNotificationsEnabled: true,
+          ),
+        );
+        final notification = _FakeNotificationRepository()..permissionGranted = false;
+        await tester.pumpWidget(_wrapWithNotificationFakes(settings, notification));
+        await tester.pumpAndSettle();
+
+        expect(
+          find.text('Bildirim izni sistem ayarlarından kapatılmış — hatırlatmalar gösterilmeyecek.'),
+          findsOneWidget,
+        );
+      },
+    );
+
+    testWidgets('tercih içeride kapalıysa OS izni kapalı olsa bile uyarı gösterilmez', (
+      tester,
+    ) async {
+      final settings = _FakeSettingsRepository(
+        const NotificationPreferences(
+          notificationsEnabled: false,
+          taskRemindersEnabled: true,
+          habitRemindersEnabled: true,
+          pomodoroNotificationsEnabled: true,
+        ),
+      );
+      final notification = _FakeNotificationRepository()..permissionGranted = false;
+      await tester.pumpWidget(_wrapWithNotificationFakes(settings, notification));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text('Bildirim izni sistem ayarlarından kapatılmış — hatırlatmalar gösterilmeyecek.'),
+        findsNothing,
+      );
+    });
+  });
+
+  group('Çıkış Yap', () {
+    Widget wrapWithAuthFake(FakeAuthRepository auth) {
+      return ProviderScope(
+        overrides: [authRepositoryProvider.overrideWithValue(auth)],
+        child: MaterialApp(theme: AppTheme.light, home: const SettingsPage()),
+      );
+    }
+
+    testWidgets('Vazgeç seçilince signOut çağrılmaz', (tester) async {
+      final auth = FakeAuthRepository();
+      await tester.pumpWidget(wrapWithAuthFake(auth));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Çıkış Yap').first);
+      await tester.pumpAndSettle();
+      expect(find.text('Vazgeç'), findsOneWidget);
+
+      await tester.tap(find.text('Vazgeç'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Ayarlar'), findsOneWidget);
+    });
+
+    testWidgets('Onaylanınca signOut çağrılır, başarısızsa hata mesajı gösterilir', (tester) async {
+      final auth = FakeAuthRepository()..voidResult = const Err(UnknownFailure('sunucu hatası'));
+      await tester.pumpWidget(wrapWithAuthFake(auth));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Çıkış Yap').first);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Çıkış Yap').last);
+      await tester.pumpAndSettle();
+
+      expect(find.text('sunucu hatası'), findsOneWidget);
+    });
+  });
+
+  group('Hesabı Sil (PRD §6.1 / Play Store zorunlu akış)', () {
+    Widget wrapWithAuthFake(FakeAuthRepository auth) {
+      return ProviderScope(
+        overrides: [authRepositoryProvider.overrideWithValue(auth)],
+        child: MaterialApp(theme: AppTheme.light, home: const SettingsPage()),
+      );
+    }
+
+    testWidgets('Vazgeç seçilince deleteAccount çağrılmaz', (tester) async {
+      final auth = FakeAuthRepository();
+      await tester.pumpWidget(wrapWithAuthFake(auth));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Hesabı Sil').first);
+      await tester.pumpAndSettle();
+      expect(find.text('Vazgeç'), findsOneWidget);
+
+      await tester.tap(find.text('Vazgeç'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Ayarlar'), findsOneWidget);
+    });
+
+    testWidgets('Onaylanınca deleteAccount çağrılır, başarısızsa hata mesajı gösterilir', (
+      tester,
+    ) async {
+      final auth = FakeAuthRepository()..voidResult = const Err(UnknownFailure('sunucu hatası'));
+      await tester.pumpWidget(wrapWithAuthFake(auth));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Hesabı Sil').first);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Hesabı Sil').last);
+      await tester.pumpAndSettle();
+
+      expect(find.text('sunucu hatası'), findsOneWidget);
     });
   });
 }

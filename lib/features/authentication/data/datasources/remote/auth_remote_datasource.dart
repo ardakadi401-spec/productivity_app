@@ -91,17 +91,99 @@ class AuthRemoteDatasource {
     }
   }
 
+  /// `users/{uid}` üst dokümanının altındaki, doğrudan bir alt-belgeye
+  /// sahip alt koleksiyonlar — DATABASE.md Bölüm 3'teki path hiyerarşisi.
+  /// `subCollections`, iki seviyeli olanlar için (örn. her `tasks/{taskId}`
+  /// kendi `subtasks` alt koleksiyonunu taşır) o dokümanın altındaki ek
+  /// koleksiyon adını belirtir.
+  static const _topLevelCollections = <String, String?>{
+    'tasks': 'subtasks',
+    'projects': null,
+    'notes': null,
+    'habits': 'habitRecords',
+    'goals': null,
+    'pomodoroSessions': null,
+    'statisticsSnapshots': null,
+    'tags': null,
+  };
+
+  /// Bir kullanıcının hesabını sildiğinde Firestore'da yalnızca `users/{uid}`
+  /// üst dokümanını silmek YETERLİ DEĞİLDİR — Firestore, bir dokümanı
+  /// sildiğinde onun alt koleksiyonlarını OTOMATİK SİLMEZ; aksi halde bu alt
+  /// koleksiyonlar erişilemez ("yetim") halde kalıcı olarak Firestore'da
+  /// kalırdı (Privacy Policy'nin "tüm verileriniz kalıcı silinir" sözüne ve
+  /// KVKK/GDPR "unutulma hakkı"na aykırı olurdu). Bu yüzden önce TÜM alt
+  /// koleksiyonlar (ve varsa onların kendi alt koleksiyonları) topluca
+  /// silinir, ardından üst doküman ve Auth hesabı silinir.
+  ///
+  /// İstemci SDK'sında bir "recursive delete" yardımcı fonksiyonu
+  /// bulunmadığından bu manuel olarak, `WriteBatch`'in 500 işlemlik
+  /// limitine uyacak şekilde parça parça yapılır.
   Future<void> deleteAccount() async {
     final uid = _authService.currentUser?.uid;
     try {
+      // Firebase, hassas işlemler için (hesap silme dahil) YAKIN ZAMANDA
+      // giriş yapılmış olmasını şart koşar — geç kalırsa `deleteAccount()`
+      // çağrısı `requires-recent-login` ile başarısız olur. Bu kontrol
+      // olmadan önce Firestore verisi silinip SONRA Auth silme adımı bu
+      // hatayla başarısız olabiliyordu: kullanıcının tüm verileri gitmiş
+      // ama hesabı hâlâ duruyor oluyordu (yarım/tutarsız silme). Bu yüzden
+      // veri silme işlemine hiç başlamadan ÖNCE oturumun tazeliği kontrol
+      // edilir — taze değilse hiçbir veri silinmeden erken çıkılır.
+      if (!_hasRecentLogin()) {
+        throw AuthException('requires-recent-login');
+      }
       if (uid != null) {
-        await _firestore.collection('users').doc(uid).delete();
+        await _deleteAllUserData(uid);
       }
       await _authService.deleteAccount();
     } on fb.FirebaseAuthException catch (e) {
       throw AuthException(e.code);
+    } on AppException {
+      rethrow;
     } catch (e) {
       throw UnknownException(e.toString());
+    }
+  }
+
+  /// Firebase'in hassas işlemler için beklediği "yakın zamanda giriş"
+  /// penceresi belgelenmiş sabit bir değer değildir; gözlemlenen ~5 dakikalık
+  /// eşiğin altında güvenli bir pay bırakmak için 4 dakika kullanılır.
+  bool _hasRecentLogin() {
+    final lastSignIn = _authService.currentUser?.metadata.lastSignInTime;
+    if (lastSignIn == null) return false;
+    return DateTime.now().difference(lastSignIn) < const Duration(minutes: 4);
+  }
+
+  Future<void> _deleteAllUserData(String uid) async {
+    final userRef = _firestore.collection('users').doc(uid);
+    for (final entry in _topLevelCollections.entries) {
+      final docs = await userRef.collection(entry.key).get();
+      final subCollectionName = entry.value;
+      if (subCollectionName != null) {
+        // Yüzlerce doküman olabileceğinden (ör. `tasks`), her birinin alt
+        // koleksiyonunu SIRALI değil PARALEL sorgulamak gerekir — aksi halde
+        // her doküman ayrı bir network round-trip'i bekletir ve işlem
+        // dokümanlarla orantılı şekilde onlarca saniyeye çıkabilir.
+        await Future.wait(docs.docs.map((doc) async {
+          final subDocs = await doc.reference.collection(subCollectionName).get();
+          await _deleteInBatches(subDocs.docs.map((d) => d.reference).toList());
+        }));
+      }
+      await _deleteInBatches(docs.docs.map((d) => d.reference).toList());
+    }
+    await userRef.delete();
+  }
+
+  Future<void> _deleteInBatches(List<DocumentReference<Map<String, dynamic>>> refs) async {
+    const batchLimit = 500;
+    for (var i = 0; i < refs.length; i += batchLimit) {
+      final chunk = refs.skip(i).take(batchLimit);
+      final batch = _firestore.batch();
+      for (final ref in chunk) {
+        batch.delete(ref);
+      }
+      await batch.commit();
     }
   }
 
