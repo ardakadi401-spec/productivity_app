@@ -22,10 +22,27 @@
 	<string>$(FLUTTER_BUILD_NAME)</string>
 	<key>CFBundleSignature</key>
 	<string>????</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<!-- GoogleService-Info.plist REVERSED_CLIENT_ID — Google Sign-In'in
+				     iOS'ta OAuth yönlendirmesini uygulamaya geri getirebilmesi için
+				     zorunlu (google_sign_in_ios paketinin gereksinimi). -->
+				<string>com.googleusercontent.apps.276808349193-4ia73gfmjtpnc5u9ertnu5dfs1h81q9p</string>
+			</array>
+		</dict>
+	</array>
 	<key>CFBundleVersion</key>
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<!-- FAZ 15 — `local_auth` biyometrik kilit (Face ID). -->
+	<key>NSFaceIDUsageDescription</key>
+	<string>Uygulama kilidini Face ID ile hızlıca açabilmen için kullanılır.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

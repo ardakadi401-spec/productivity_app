@@ -12,7 +12,20 @@
           "package_name": "com.ardakadi.productivityapp"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "276808349193-dtqh1df0859svfacqa8evs51dnq8511l.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.ardakadi.productivityapp",
+            "certificate_hash": "354a96c261bb55601440f327be59663b5c840c4f"
+          }
+        },
+        {
+          "client_id": "276808349193-kn21rjsj0cjtmbmfth6ascni6mmbb3j1.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyB9WoWGFVXmZ3j4AFj6b8dBxnPOyPJ9SoE"
@@ -20,7 +33,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "276808349193-kn21rjsj0cjtmbmfth6ascni6mmbb3j1.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "276808349193-4ia73gfmjtpnc5u9ertnu5dfs1h81q9p.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.ardakadi.productivityapp"
+              }
+            }
+          ]
         }
       }
     }
