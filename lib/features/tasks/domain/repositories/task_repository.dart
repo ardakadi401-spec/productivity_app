@@ -36,6 +36,9 @@ abstract interface class TaskRepository {
 
   Future<Result<void>> setSubTaskCompleted(String subtaskId, {required bool isCompleted});
 
+  /// DATABASE.md §13.1 — soft delete (SubTasks bu kuralın kapsamındadır).
+  Future<Result<void>> deleteSubTask(String subtaskId);
+
   /// Alt görev sayaçlarını (denormalize `subtaskCount`/`completedSubtaskCount`)
   /// gerçek alt görev listesinden yeniden hesaplayıp üst göreve yazar —
   /// DATABASE.md §5.3 "atomic counter update".

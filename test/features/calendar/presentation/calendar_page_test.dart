@@ -60,6 +60,8 @@ class _FakeTaskRepository implements TaskRepository {
   Future<Result<void>> setSubTaskCompleted(String subtaskId, {required bool isCompleted}) =>
       throw UnimplementedError();
   @override
+  Future<Result<void>> deleteSubTask(String subtaskId) => throw UnimplementedError();
+  @override
   Future<Result<Task>> recalculateTaskProgress(String taskId) => throw UnimplementedError();
 }
 
@@ -137,4 +139,32 @@ void main() {
     final prevMonthDate = DateTime(now.year, now.month - 1);
     expect(find.textContaining(_monthNames[prevMonthDate.month - 1]), findsOneWidget);
   });
+
+  testWidgets(
+    '"Bu Ay" filtresi, seçili günün ajandasında görünmeyen (aynı ay içindeki başka bir '
+    'güne ait) bir görevi de gösterir (ROADMAP FAZ 7 "Tarih bazlı filtreleme")',
+    (tester) async {
+      enlargeViewport(tester);
+      final now = DateTime.now();
+      // Bugün olmayan ama aynı ay içinde kalan bir gün (ayın 1'i, bugün 1
+      // değilse farklı bir gün olur; ayın 1'i bugünse 2'yi kullan).
+      final otherDayInMonth =
+          now.day == 1 ? DateTime(now.year, now.month, 2) : DateTime(now.year, now.month, 1);
+      final fake = _FakeTaskRepository()
+        ..tasksResult = [_task(dueDate: otherDayInMonth, title: 'Aylık Rapor Teslimi')];
+
+      await tester.pumpWidget(_wrap(fake));
+      await tester.pump();
+      await tester.pump();
+
+      // Günlük (varsayılan "Bugün") ajandada görünmemeli.
+      expect(find.text('Aylık Rapor Teslimi'), findsNothing);
+
+      await tester.tap(find.text('Bu Ay'));
+      await tester.pump();
+      await tester.pump();
+
+      expect(find.text('Aylık Rapor Teslimi'), findsOneWidget);
+    },
+  );
 }

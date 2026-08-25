@@ -36,6 +36,7 @@ class TaskLocalDatasource {
       () => _isar.subTaskLocalModels
           .filter()
           .taskIdEqualTo(taskId)
+          .isDeletedEqualTo(false)
           .sortByOrder()
           .watch(fireImmediately: true),
     );
@@ -74,8 +75,20 @@ class TaskLocalDatasource {
       return await _isar.subTaskLocalModels
           .filter()
           .taskIdEqualTo(taskId)
+          .isDeletedEqualTo(false)
           .sortByOrder()
           .findAll();
+    } catch (e) {
+      throw CacheException(e.toString());
+    }
+  }
+
+  /// Bir görev silindiğinde bağlı TÜM alt görevleri (silinmiş olanlar dahil,
+  /// yeniden senkronizasyon için) döner — `deleteTask`'ın cascade soft-delete
+  /// akışında kullanılır.
+  Future<List<SubTaskLocalModel>> getAllSubTasksIncludingDeleted(String taskId) async {
+    try {
+      return await _isar.subTaskLocalModels.filter().taskIdEqualTo(taskId).findAll();
     } catch (e) {
       throw CacheException(e.toString());
     }

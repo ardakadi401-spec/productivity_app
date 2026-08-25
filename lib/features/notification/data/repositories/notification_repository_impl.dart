@@ -83,6 +83,18 @@ class NotificationRepositoryImpl implements NotificationRepository {
   }
 
   @override
+  Future<bool> areNotificationsEnabled() async {
+    final android =
+        _plugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+    if (android == null) return false;
+    try {
+      return await android.areNotificationsEnabled() ?? false;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  @override
   Future<void> scheduleNotification(NotificationRequest request) async {
     final details = NotificationDetails(
       android: AndroidNotificationDetails(

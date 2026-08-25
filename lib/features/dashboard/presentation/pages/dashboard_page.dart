@@ -234,6 +234,7 @@ class _TodayTasksSection extends ConsumerWidget {
           children: [
             for (final task in tasks) ...[
               TaskCardWidget(
+                key: ValueKey(task.taskId),
                 title: task.title,
                 isCompleted: task.isCompleted,
                 priority: toPriorityLevel(task.priority),
@@ -338,7 +339,10 @@ class _TodayHabitsSection extends ConsumerWidget {
             separatorBuilder: (_, _) => const SizedBox(width: AppSpacing.sm),
             itemBuilder: (context, index) {
               final habit = habits[index];
-              return SizedBox(width: 260, child: _DashboardHabitCard(habitId: habit.habitId));
+              return SizedBox(
+                width: 260,
+                child: _DashboardHabitCard(key: ValueKey(habit.habitId), habitId: habit.habitId),
+              );
             },
           ),
         );
@@ -348,7 +352,7 @@ class _TodayHabitsSection extends ConsumerWidget {
 }
 
 class _DashboardHabitCard extends ConsumerWidget {
-  const _DashboardHabitCard({required this.habitId});
+  const _DashboardHabitCard({super.key, required this.habitId});
 
   final String habitId;
 

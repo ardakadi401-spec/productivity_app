@@ -24,6 +24,11 @@ class SubTaskLocalModel {
   late DateTime createdAt;
   late DateTime updatedAt;
 
+  /// DATABASE.md §13.1 — SubTasks, soft delete gerektiren koleksiyonlar
+  /// listesindedir (Projects/Tasks/SubTasks/Habits/Goals/Notes ile aynı).
+  late bool isDeleted;
+  DateTime? deletedAt;
+
   @Enumerated(EnumType.name)
   late SyncStatusLocal syncStatus;
   DateTime? lastSyncedAt;
@@ -37,6 +42,8 @@ class SubTaskLocalModel {
       'order': order,
       'createdAt': Timestamp.fromDate(createdAt),
       'updatedAt': Timestamp.fromDate(updatedAt),
+      'isDeleted': isDeleted,
+      'deletedAt': deletedAt == null ? null : Timestamp.fromDate(deletedAt!),
     };
   }
 
@@ -53,6 +60,8 @@ class SubTaskLocalModel {
       ..order = data['order'] as int? ?? 0
       ..createdAt = (data['createdAt'] as Timestamp).toDate()
       ..updatedAt = (data['updatedAt'] as Timestamp).toDate()
+      ..isDeleted = data['isDeleted'] as bool? ?? false
+      ..deletedAt = (data['deletedAt'] as Timestamp?)?.toDate()
       ..syncStatus = SyncStatusLocal.synced
       ..lastSyncedAt = DateTime.now()
       ..localUpdatedAt = (data['updatedAt'] as Timestamp).toDate();

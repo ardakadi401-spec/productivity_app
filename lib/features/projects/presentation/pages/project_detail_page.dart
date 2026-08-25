@@ -214,6 +214,7 @@ class _ProjectDetailBody extends ConsumerWidget {
               children: [
                 for (final task in tasks) ...[
                   TaskCardWidget(
+                    key: ValueKey(task.taskId),
                     title: task.title,
                     isCompleted: task.isCompleted,
                     priority: _toPriorityLevel(task.priority),
@@ -265,6 +266,7 @@ class _ProjectDetailBody extends ConsumerWidget {
               children: [
                 for (final note in notes) ...[
                   NoteCardWidget(
+                    key: ValueKey(note.noteId),
                     title: note.title,
                     contentPreview: notePreviewText(note.content),
                     color: note.color == null ? null : hexToColor(note.color!),

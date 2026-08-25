@@ -31,6 +31,8 @@ class _FakeNotificationRepository implements NotificationRepository {
   @override
   Future<bool> requestPermission() async => true;
   @override
+  Future<bool> areNotificationsEnabled() async => true;
+  @override
   Stream<String> get notificationTaps => const Stream.empty();
   @override
   Future<String?> getLaunchPayload() async => null;

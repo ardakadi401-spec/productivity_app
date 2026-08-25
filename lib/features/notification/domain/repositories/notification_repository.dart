@@ -16,6 +16,12 @@ abstract interface class NotificationRepository {
   /// §11.2) — bu repository kendisi bir izin reddinde asla fırlatmaz/çökmez.
   Future<bool> requestPermission();
 
+  /// Bir izin isteği TETİKLEMEDEN yalnızca mevcut OS izin durumunu sorgular
+  /// — kullanıcı bildirimleri uygulama içinde açık bırakıp izni sistem
+  /// ayarlarından SONRADAN iptal ederse bunu tespit edip Settings ekranının
+  /// kullanıcıyı bilgilendirebilmesi için (PRD §11.2).
+  Future<bool> areNotificationsEnabled();
+
   /// Aynı `id` ile tekrar çağrılırsa öncekini değiştirir (plugin'in kendi
   /// davranışı) — ayrıca bir "cancel-then-schedule" adımına gerek yoktur.
   Future<void> scheduleNotification(NotificationRequest request);

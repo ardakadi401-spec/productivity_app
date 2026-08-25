@@ -134,6 +134,8 @@ class _FakeTaskRepository implements TaskRepository {
   Future<Result<void>> setSubTaskCompleted(String subtaskId, {required bool isCompleted}) =>
       throw UnimplementedError();
   @override
+  Future<Result<void>> deleteSubTask(String subtaskId) => throw UnimplementedError();
+  @override
   Future<Result<Task>> recalculateTaskProgress(String taskId) => throw UnimplementedError();
 }
 
@@ -189,6 +191,46 @@ void main() {
     repo.noteResult = Ok(_note());
     await UpdateNoteUseCase(repo).call(_note());
     expect(repo.lastUpdatedNote?.noteId, 'n1');
+  });
+
+  group('Not içeriği maksimum uzunluk (DATABASE.md §14.3 — 10.000 karakter)', () {
+    Note withContent(String? content) => Note(
+          noteId: 'n1',
+          title: 'Not',
+          content: content,
+          isPinned: false,
+          createdAt: DateTime(2026, 1, 1),
+          updatedAt: DateTime(2026, 1, 1),
+        );
+
+    test('CreateNoteUseCase 10.000 karakteri aşan içerikte ValidationFailure döner, repository çağrılmaz', () async {
+      final result = await CreateNoteUseCase(repo).call(withContent('a' * (noteContentMaxLength + 1)));
+
+      expect((result as Err).failure, isA<ValidationFailure>());
+      expect(repo.lastCreatedNote, isNull);
+    });
+
+    test('CreateNoteUseCase tam olarak sınırdaki içerikte repository\'ye iletir', () async {
+      repo.noteResult = Ok(_note());
+      final result = await CreateNoteUseCase(repo).call(withContent('a' * noteContentMaxLength));
+
+      expect(result, isA<Ok<Note>>());
+      expect(repo.lastCreatedNote, isNotNull);
+    });
+
+    test('UpdateNoteUseCase 10.000 karakteri aşan içerikte ValidationFailure döner, repository çağrılmaz', () async {
+      final result = await UpdateNoteUseCase(repo).call(withContent('a' * (noteContentMaxLength + 1)));
+
+      expect((result as Err).failure, isA<ValidationFailure>());
+      expect(repo.lastUpdatedNote, isNull);
+    });
+
+    test('null içerik (opsiyonel alan) her zaman geçerlidir', () async {
+      repo.noteResult = Ok(_note());
+      final result = await CreateNoteUseCase(repo).call(withContent(null));
+
+      expect(result, isA<Ok<Note>>());
+    });
   });
 
   test('DeleteNoteUseCase noteId\'yi iletir', () async {

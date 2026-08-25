@@ -37,6 +37,8 @@ class _FakeNotificationRepository implements NotificationRepository {
   @override
   Future<bool> requestPermission() async => true;
   @override
+  Future<bool> areNotificationsEnabled() async => true;
+  @override
   Stream<String> get notificationTaps => const Stream.empty();
   @override
   Future<String?> getLaunchPayload() async => null;
@@ -81,6 +83,8 @@ class _FakeTaskRepository implements TaskRepository {
   @override
   Future<Result<void>> setSubTaskCompleted(String subtaskId, {required bool isCompleted}) =>
       throw UnimplementedError();
+  @override
+  Future<Result<void>> deleteSubTask(String subtaskId) => throw UnimplementedError();
   @override
   Future<Result<Task>> recalculateTaskProgress(String taskId) => throw UnimplementedError();
 }
@@ -233,6 +237,8 @@ class _ThrowingTaskRepository implements TaskRepository {
   @override
   Future<Result<void>> setSubTaskCompleted(String subtaskId, {required bool isCompleted}) =>
       throw UnimplementedError();
+  @override
+  Future<Result<void>> deleteSubTask(String subtaskId) => throw UnimplementedError();
   @override
   Future<Result<Task>> recalculateTaskProgress(String taskId) => throw UnimplementedError();
 }

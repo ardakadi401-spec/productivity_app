@@ -52,6 +52,10 @@ class TaskDetailController extends AutoDisposeFamilyStreamNotifier<Task?, String
     return ref.read(completeSubTaskUseCaseProvider).call(subtaskId, isCompleted: isCompleted);
   }
 
+  Future<Result<void>> deleteSubTask(String subtaskId) {
+    return ref.read(deleteSubTaskUseCaseProvider).call(subtaskId);
+  }
+
   Result<void> _toVoid<T>(Result<T> result) => switch (result) {
         Ok() => const Ok(null),
         Err(:final failure) => Err(failure),

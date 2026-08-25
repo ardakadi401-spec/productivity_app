@@ -27,7 +27,9 @@ void insertBulletMarker(TextEditingController controller) {
   final text = controller.text;
   final cursor = selection.start < 0 ? text.length : selection.start;
 
-  final lineStart = text.lastIndexOf('\n', cursor - 1) + 1;
+  // `cursor - 1` negatifse (imleç metnin en başındaysa) `lastIndexOf`
+  // RangeError fırlatır — bu durumda öncesinde satır başı yoktur zaten.
+  final lineStart = cursor <= 0 ? 0 : text.lastIndexOf('\n', cursor - 1) + 1;
   if (text.substring(lineStart).startsWith('- ')) return;
 
   final newText = text.replaceRange(lineStart, lineStart, '- ');

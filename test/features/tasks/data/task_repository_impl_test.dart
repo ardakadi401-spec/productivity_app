@@ -132,6 +132,7 @@ void main() {
     test('mevcut kaydı soft-delete olarak işaretler (isDeleted/deletedAt/pendingDelete)', () async {
       when(() => local.getByTaskId('t1')).thenAnswer((_) async => _model());
       when(() => local.putTask(any())).thenAnswer((_) async {});
+      when(() => local.getAllSubTasksIncludingDeleted('t1')).thenAnswer((_) async => []);
 
       final result = await repository.deleteTask('t1');
 
@@ -148,6 +149,32 @@ void main() {
       final result = await repository.deleteTask('missing');
 
       expect((result as Err).failure, isA<CacheFailure>());
+    });
+
+    test('bağlı alt görevleri de cascade soft-delete eder (öksüz kalmaz)', () async {
+      final subtask = SubTaskLocalModel()
+        ..subtaskId = 's1'
+        ..taskId = 't1'
+        ..title = 'Alt görev'
+        ..isCompleted = false
+        ..order = 0
+        ..createdAt = DateTime(2026, 1, 1)
+        ..updatedAt = DateTime(2026, 1, 1)
+        ..isDeleted = false
+        ..syncStatus = SyncStatusLocal.synced
+        ..localUpdatedAt = DateTime(2026, 1, 1);
+      when(() => local.getByTaskId('t1')).thenAnswer((_) async => _model());
+      when(() => local.putTask(any())).thenAnswer((_) async {});
+      when(() => local.getAllSubTasksIncludingDeleted('t1')).thenAnswer((_) async => [subtask]);
+      when(() => local.putSubTask(any())).thenAnswer((_) async {});
+
+      await repository.deleteTask('t1');
+
+      final captured =
+          verify(() => local.putSubTask(captureAny())).captured.single as SubTaskLocalModel;
+      expect(captured.isDeleted, isTrue);
+      expect(captured.deletedAt, isNotNull);
+      expect(captured.syncStatus, SyncStatusLocal.pendingDelete);
     });
   });
 
@@ -422,6 +449,56 @@ void main() {
           await repository.watchTasks(filter: const TaskFilter(priority: TaskPriority.high)).first;
 
       expect(result.map((t) => t.taskId), ['high']);
+    });
+  });
+
+  group('TaskRepositoryImpl.filterDueToday — gece yarısı geçişi (ROADMAP FAZ 5 test noktası)', () {
+    TaskLocalModel dueOn(DateTime date, {String taskId = 't1'}) =>
+        _model(taskId: taskId)..dueDate = date;
+
+    test('now 23:59 iken, aynı günün 00:00\'ına ait görev "bugün" sayılır', () {
+      final now = DateTime(2026, 3, 10, 23, 59);
+      final task = dueOn(DateTime(2026, 3, 10));
+
+      final result = TaskRepositoryImpl.filterDueToday([task], now);
+
+      expect(result.map((t) => t.taskId), ['t1']);
+    });
+
+    test('now 00:00\'ı geçip yeni güne girince, dünün görevi artık "bugün" değildir', () {
+      final now = DateTime(2026, 3, 11, 0, 1);
+      final yesterdayTask = dueOn(DateTime(2026, 3, 10));
+
+      final result = TaskRepositoryImpl.filterDueToday([yesterdayTask], now);
+
+      expect(result, isEmpty);
+    });
+
+    test('gün sınırında (tam gece yarısı) yeni günün görevi dahil edilir', () {
+      final now = DateTime(2026, 3, 11);
+      final todayTask = dueOn(DateTime(2026, 3, 11));
+
+      final result = TaskRepositoryImpl.filterDueToday([todayTask], now);
+
+      expect(result.map((t) => t.taskId), ['t1']);
+    });
+
+    test('yarının görevi (henüz gelmemiş gün) "bugün" listesine dahil edilmez', () {
+      final now = DateTime(2026, 3, 10, 12);
+      final tomorrowTask = dueOn(DateTime(2026, 3, 11));
+
+      final result = TaskRepositoryImpl.filterDueToday([tomorrowTask], now);
+
+      expect(result, isEmpty);
+    });
+
+    test('soft-delete edilmiş görev, tarihi bugün olsa bile listelenmez', () {
+      final now = DateTime(2026, 3, 10, 12);
+      final deletedTask = dueOn(DateTime(2026, 3, 10))..isDeleted = true;
+
+      final result = TaskRepositoryImpl.filterDueToday([deletedTask], now);
+
+      expect(result, isEmpty);
     });
   });
 }

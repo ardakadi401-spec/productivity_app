@@ -41,4 +41,25 @@ class StatisticsSnapshotRemoteDatasource {
       throw NetworkException(e.toString());
     }
   }
+
+  /// DATABASE.md §12.3 — 90 günlük yerel saklama penceresinin dışına
+  /// düşmüş (yerelden budanmış) ama kullanıcının geçmiş dönem raporu için
+  /// talep ettiği snapshot'ları isteğe bağlı olarak Firestore'dan çekmek
+  /// için — `fetchAllSnapshots()`'ın aksine yalnızca istenen aralığı sorgular.
+  Future<List<StatisticsSnapshotLocalModel>> fetchSnapshotsInRange(
+    DateTime start,
+    DateTime end,
+  ) async {
+    try {
+      final snapshot = await _snapshotsRef
+          .where('date', isGreaterThanOrEqualTo: Timestamp.fromDate(start))
+          .where('date', isLessThanOrEqualTo: Timestamp.fromDate(end))
+          .get();
+      return snapshot.docs
+          .map((doc) => StatisticsSnapshotLocalModel.fromFirestoreData(doc.id, doc.data()))
+          .toList();
+    } catch (e) {
+      throw NetworkException(e.toString());
+    }
+  }
 }

@@ -28,8 +28,13 @@ class _FakeHabitRepository implements HabitRepository {
   Stream<List<HabitRecord>> watchHabitRecords(String habitId) =>
       Stream.value(recordsByHabit[habitId] ?? const []);
 
+  Habit? lastCreated;
+
   @override
-  Future<Result<Habit>> createHabit(Habit habit) => throw UnimplementedError();
+  Future<Result<Habit>> createHabit(Habit habit) async {
+    lastCreated = habit;
+    return Ok(habit);
+  }
   @override
   Future<Result<Habit>> updateHabit(Habit habit) => throw UnimplementedError();
   @override
@@ -129,4 +134,33 @@ void main() {
     expect(fake.lastCheckIn?.habitId, 'h1');
     expect(fake.lastCheckIn?.isCompleted, isTrue);
   });
+
+  testWidgets(
+    '"Alışkanlık Ekle" boş durum eylemi CreateHabitSheet açar; geçerli isimle oluşturulunca '
+    'createHabit çağrılır',
+    (tester) async {
+      // Bottom Sheet içeriği (isim + ikon/renk seçici + sıklık seçici +
+      // kaydet butonu) varsayılan 800x600 test görünümünde taşıyor
+      // (project_detail_page_test.dart'taki EditProjectSheet ile aynı
+      // gerekçe).
+      tester.view.physicalSize = const Size(800, 1000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      final fake = _FakeHabitRepository();
+      await tester.pumpWidget(_wrap(fake));
+      await tester.pump();
+
+      await tester.tap(find.text('Alışkanlık Ekle'));
+      await tester.pumpAndSettle();
+
+      await tester.enterText(find.byType(TextField).first, 'Erken kalk');
+      await tester.pump();
+      await tester.tap(find.text('Oluştur'));
+      await tester.pumpAndSettle();
+
+      expect(fake.lastCreated?.name, 'Erken kalk');
+    },
+  );
 }

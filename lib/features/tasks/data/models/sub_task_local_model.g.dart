@@ -22,37 +22,47 @@ const SubTaskLocalModelSchema = CollectionSchema(
       name: r'createdAt',
       type: IsarType.dateTime,
     ),
-    r'isCompleted': PropertySchema(
+    r'deletedAt': PropertySchema(
       id: 1,
+      name: r'deletedAt',
+      type: IsarType.dateTime,
+    ),
+    r'isCompleted': PropertySchema(
+      id: 2,
       name: r'isCompleted',
       type: IsarType.bool,
     ),
+    r'isDeleted': PropertySchema(
+      id: 3,
+      name: r'isDeleted',
+      type: IsarType.bool,
+    ),
     r'lastSyncedAt': PropertySchema(
-      id: 2,
+      id: 4,
       name: r'lastSyncedAt',
       type: IsarType.dateTime,
     ),
     r'localUpdatedAt': PropertySchema(
-      id: 3,
+      id: 5,
       name: r'localUpdatedAt',
       type: IsarType.dateTime,
     ),
-    r'order': PropertySchema(id: 4, name: r'order', type: IsarType.long),
+    r'order': PropertySchema(id: 6, name: r'order', type: IsarType.long),
     r'subtaskId': PropertySchema(
-      id: 5,
+      id: 7,
       name: r'subtaskId',
       type: IsarType.string,
     ),
     r'syncStatus': PropertySchema(
-      id: 6,
+      id: 8,
       name: r'syncStatus',
       type: IsarType.string,
       enumMap: _SubTaskLocalModelsyncStatusEnumValueMap,
     ),
-    r'taskId': PropertySchema(id: 7, name: r'taskId', type: IsarType.string),
-    r'title': PropertySchema(id: 8, name: r'title', type: IsarType.string),
+    r'taskId': PropertySchema(id: 9, name: r'taskId', type: IsarType.string),
+    r'title': PropertySchema(id: 10, name: r'title', type: IsarType.string),
     r'updatedAt': PropertySchema(
-      id: 9,
+      id: 11,
       name: r'updatedAt',
       type: IsarType.dateTime,
     ),
@@ -120,15 +130,17 @@ void _subTaskLocalModelSerialize(
   Map<Type, List<int>> allOffsets,
 ) {
   writer.writeDateTime(offsets[0], object.createdAt);
-  writer.writeBool(offsets[1], object.isCompleted);
-  writer.writeDateTime(offsets[2], object.lastSyncedAt);
-  writer.writeDateTime(offsets[3], object.localUpdatedAt);
-  writer.writeLong(offsets[4], object.order);
-  writer.writeString(offsets[5], object.subtaskId);
-  writer.writeString(offsets[6], object.syncStatus.name);
-  writer.writeString(offsets[7], object.taskId);
-  writer.writeString(offsets[8], object.title);
-  writer.writeDateTime(offsets[9], object.updatedAt);
+  writer.writeDateTime(offsets[1], object.deletedAt);
+  writer.writeBool(offsets[2], object.isCompleted);
+  writer.writeBool(offsets[3], object.isDeleted);
+  writer.writeDateTime(offsets[4], object.lastSyncedAt);
+  writer.writeDateTime(offsets[5], object.localUpdatedAt);
+  writer.writeLong(offsets[6], object.order);
+  writer.writeString(offsets[7], object.subtaskId);
+  writer.writeString(offsets[8], object.syncStatus.name);
+  writer.writeString(offsets[9], object.taskId);
+  writer.writeString(offsets[10], object.title);
+  writer.writeDateTime(offsets[11], object.updatedAt);
 }
 
 SubTaskLocalModel _subTaskLocalModelDeserialize(
@@ -139,20 +151,22 @@ SubTaskLocalModel _subTaskLocalModelDeserialize(
 ) {
   final object = SubTaskLocalModel();
   object.createdAt = reader.readDateTime(offsets[0]);
+  object.deletedAt = reader.readDateTimeOrNull(offsets[1]);
   object.id = id;
-  object.isCompleted = reader.readBool(offsets[1]);
-  object.lastSyncedAt = reader.readDateTimeOrNull(offsets[2]);
-  object.localUpdatedAt = reader.readDateTime(offsets[3]);
-  object.order = reader.readLong(offsets[4]);
-  object.subtaskId = reader.readString(offsets[5]);
+  object.isCompleted = reader.readBool(offsets[2]);
+  object.isDeleted = reader.readBool(offsets[3]);
+  object.lastSyncedAt = reader.readDateTimeOrNull(offsets[4]);
+  object.localUpdatedAt = reader.readDateTime(offsets[5]);
+  object.order = reader.readLong(offsets[6]);
+  object.subtaskId = reader.readString(offsets[7]);
   object.syncStatus =
       _SubTaskLocalModelsyncStatusValueEnumMap[reader.readStringOrNull(
-        offsets[6],
+        offsets[8],
       )] ??
       SyncStatusLocal.synced;
-  object.taskId = reader.readString(offsets[7]);
-  object.title = reader.readString(offsets[8]);
-  object.updatedAt = reader.readDateTime(offsets[9]);
+  object.taskId = reader.readString(offsets[9]);
+  object.title = reader.readString(offsets[10]);
+  object.updatedAt = reader.readDateTime(offsets[11]);
   return object;
 }
 
@@ -166,26 +180,30 @@ P _subTaskLocalModelDeserializeProp<P>(
     case 0:
       return (reader.readDateTime(offset)) as P;
     case 1:
-      return (reader.readBool(offset)) as P;
-    case 2:
       return (reader.readDateTimeOrNull(offset)) as P;
+    case 2:
+      return (reader.readBool(offset)) as P;
     case 3:
-      return (reader.readDateTime(offset)) as P;
+      return (reader.readBool(offset)) as P;
     case 4:
-      return (reader.readLong(offset)) as P;
+      return (reader.readDateTimeOrNull(offset)) as P;
     case 5:
-      return (reader.readString(offset)) as P;
+      return (reader.readDateTime(offset)) as P;
     case 6:
+      return (reader.readLong(offset)) as P;
+    case 7:
+      return (reader.readString(offset)) as P;
+    case 8:
       return (_SubTaskLocalModelsyncStatusValueEnumMap[reader.readStringOrNull(
                 offset,
               )] ??
               SyncStatusLocal.synced)
           as P;
-    case 7:
-      return (reader.readString(offset)) as P;
-    case 8:
-      return (reader.readString(offset)) as P;
     case 9:
+      return (reader.readString(offset)) as P;
+    case 10:
+      return (reader.readString(offset)) as P;
+    case 11:
       return (reader.readDateTime(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -525,6 +543,79 @@ extension SubTaskLocalModelQueryFilter
   }
 
   QueryBuilder<SubTaskLocalModel, SubTaskLocalModel, QAfterFilterCondition>
+  deletedAtIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'deletedAt'),
+      );
+    });
+  }
+
+  QueryBuilder<SubTaskLocalModel, SubTaskLocalModel, QAfterFilterCondition>
+  deletedAtIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'deletedAt'),
+      );
+    });
+  }
+
+  QueryBuilder<SubTaskLocalModel, SubTaskLocalModel, QAfterFilterCondition>
+  deletedAtEqualTo(DateTime? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'deletedAt', value: value),
+      );
+    });
+  }
+
+  QueryBuilder<SubTaskLocalModel, SubTaskLocalModel, QAfterFilterCondition>
+  deletedAtGreaterThan(DateTime? value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'deletedAt',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SubTaskLocalModel, SubTaskLocalModel, QAfterFilterCondition>
+  deletedAtLessThan(DateTime? value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'deletedAt',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SubTaskLocalModel, SubTaskLocalModel, QAfterFilterCondition>
+  deletedAtBetween(
+    DateTime? lower,
+    DateTime? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'deletedAt',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SubTaskLocalModel, SubTaskLocalModel, QAfterFilterCondition>
   idEqualTo(Id value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
@@ -584,6 +675,15 @@ extension SubTaskLocalModelQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         FilterCondition.equalTo(property: r'isCompleted', value: value),
+      );
+    });
+  }
+
+  QueryBuilder<SubTaskLocalModel, SubTaskLocalModel, QAfterFilterCondition>
+  isDeletedEqualTo(bool value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'isDeleted', value: value),
       );
     });
   }
@@ -1414,6 +1514,20 @@ extension SubTaskLocalModelQuerySortBy
   }
 
   QueryBuilder<SubTaskLocalModel, SubTaskLocalModel, QAfterSortBy>
+  sortByDeletedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'deletedAt', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SubTaskLocalModel, SubTaskLocalModel, QAfterSortBy>
+  sortByDeletedAtDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'deletedAt', Sort.desc);
+    });
+  }
+
+  QueryBuilder<SubTaskLocalModel, SubTaskLocalModel, QAfterSortBy>
   sortByIsCompleted() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'isCompleted', Sort.asc);
@@ -1424,6 +1538,20 @@ extension SubTaskLocalModelQuerySortBy
   sortByIsCompletedDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'isCompleted', Sort.desc);
+    });
+  }
+
+  QueryBuilder<SubTaskLocalModel, SubTaskLocalModel, QAfterSortBy>
+  sortByIsDeleted() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isDeleted', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SubTaskLocalModel, SubTaskLocalModel, QAfterSortBy>
+  sortByIsDeletedDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isDeleted', Sort.desc);
     });
   }
 
@@ -1556,6 +1684,20 @@ extension SubTaskLocalModelQuerySortThenBy
     });
   }
 
+  QueryBuilder<SubTaskLocalModel, SubTaskLocalModel, QAfterSortBy>
+  thenByDeletedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'deletedAt', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SubTaskLocalModel, SubTaskLocalModel, QAfterSortBy>
+  thenByDeletedAtDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'deletedAt', Sort.desc);
+    });
+  }
+
   QueryBuilder<SubTaskLocalModel, SubTaskLocalModel, QAfterSortBy> thenById() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'id', Sort.asc);
@@ -1580,6 +1722,20 @@ extension SubTaskLocalModelQuerySortThenBy
   thenByIsCompletedDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'isCompleted', Sort.desc);
+    });
+  }
+
+  QueryBuilder<SubTaskLocalModel, SubTaskLocalModel, QAfterSortBy>
+  thenByIsDeleted() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isDeleted', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SubTaskLocalModel, SubTaskLocalModel, QAfterSortBy>
+  thenByIsDeletedDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isDeleted', Sort.desc);
     });
   }
 
@@ -1706,9 +1862,23 @@ extension SubTaskLocalModelQueryWhereDistinct
   }
 
   QueryBuilder<SubTaskLocalModel, SubTaskLocalModel, QDistinct>
+  distinctByDeletedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'deletedAt');
+    });
+  }
+
+  QueryBuilder<SubTaskLocalModel, SubTaskLocalModel, QDistinct>
   distinctByIsCompleted() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'isCompleted');
+    });
+  }
+
+  QueryBuilder<SubTaskLocalModel, SubTaskLocalModel, QDistinct>
+  distinctByIsDeleted() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'isDeleted');
     });
   }
 
@@ -1784,10 +1954,23 @@ extension SubTaskLocalModelQueryProperty
     });
   }
 
+  QueryBuilder<SubTaskLocalModel, DateTime?, QQueryOperations>
+  deletedAtProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'deletedAt');
+    });
+  }
+
   QueryBuilder<SubTaskLocalModel, bool, QQueryOperations>
   isCompletedProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'isCompleted');
+    });
+  }
+
+  QueryBuilder<SubTaskLocalModel, bool, QQueryOperations> isDeletedProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'isDeleted');
     });
   }
 

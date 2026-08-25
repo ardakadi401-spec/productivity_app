@@ -229,21 +229,46 @@ class _TaskDetailBody extends ConsumerWidget {
             return Column(
               children: [
                 for (final subTask in subTasks)
-                  CheckboxListTile(
-                    contentPadding: EdgeInsets.zero,
-                    controlAffinity: ListTileControlAffinity.leading,
-                    value: subTask.isCompleted,
-                    title: Text(
-                      subTask.title,
-                      style: AppTypography.bodyMd.copyWith(
-                        color: subTask.isCompleted ? tokens.textDisabled : theme.colorScheme.onSurface,
-                        decoration:
-                            subTask.isCompleted ? TextDecoration.lineThrough : TextDecoration.none,
-                      ),
+                  Dismissible(
+                    key: ValueKey(subTask.subtaskId),
+                    direction: DismissDirection.endToStart,
+                    background: Container(
+                      alignment: Alignment.centerRight,
+                      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                      color: theme.colorScheme.error,
+                      child: Icon(Icons.delete_outline, color: theme.colorScheme.onError),
                     ),
-                    onChanged: (value) => controller.toggleSubTaskCompleted(
-                      subTask.subtaskId,
-                      isCompleted: value ?? false,
+                    confirmDismiss: (_) => AppDialog.show(
+                      context,
+                      title: 'Alt Görevi Sil',
+                      description: '"${subTask.title}" alt görevini silmek istediğine emin misin?',
+                      confirmLabel: 'Sil',
+                      isDestructive: true,
+                    ),
+                    onDismissed: (_) async {
+                      final result = await controller.deleteSubTask(subTask.subtaskId);
+                      if (!context.mounted) return;
+                      if (result case Err(:final failure)) {
+                        AppSnackbar.show(context, message: failure.message);
+                      }
+                    },
+                    child: CheckboxListTile(
+                      contentPadding: EdgeInsets.zero,
+                      controlAffinity: ListTileControlAffinity.leading,
+                      value: subTask.isCompleted,
+                      title: Text(
+                        subTask.title,
+                        style: AppTypography.bodyMd.copyWith(
+                          color:
+                              subTask.isCompleted ? tokens.textDisabled : theme.colorScheme.onSurface,
+                          decoration:
+                              subTask.isCompleted ? TextDecoration.lineThrough : TextDecoration.none,
+                        ),
+                      ),
+                      onChanged: (value) => controller.toggleSubTaskCompleted(
+                        subTask.subtaskId,
+                        isCompleted: value ?? false,
+                      ),
                     ),
                   ),
               ],
@@ -286,6 +311,7 @@ class _TaskDetailBody extends ConsumerWidget {
               children: [
                 for (final note in notes) ...[
                   NoteCardWidget(
+                    key: ValueKey(note.noteId),
                     title: note.title,
                     contentPreview: notePreviewText(note.content),
                     color: note.color == null ? null : hexToColor(note.color!),
@@ -315,7 +341,7 @@ class _TaskDetailBody extends ConsumerWidget {
             return Column(
               children: [
                 for (final session in sessions) ...[
-                  _PomodoroSessionRow(session: session),
+                  _PomodoroSessionRow(key: ValueKey(session.sessionId), session: session),
                   const SizedBox(height: AppSpacing.xs),
                 ],
               ],
@@ -400,7 +426,7 @@ class _LinkedProjectChip extends ConsumerWidget {
 /// `PomodoroTimerController._advanceToNextPhase` mola oturumlarına taskId
 /// atamama kararı).
 class _PomodoroSessionRow extends StatelessWidget {
-  const _PomodoroSessionRow({required this.session});
+  const _PomodoroSessionRow({super.key, required this.session});
 
   final PomodoroSession session;
 

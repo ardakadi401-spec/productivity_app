@@ -196,6 +196,7 @@ class _HabitDetailBody extends StatelessWidget {
               children: [
                 for (final record in sorted.take(30))
                   ListTile(
+                    key: ValueKey(record.recordId),
                     contentPadding: EdgeInsets.zero,
                     leading: Icon(
                       record.isCompleted ? Icons.check_circle : Icons.circle_outlined,

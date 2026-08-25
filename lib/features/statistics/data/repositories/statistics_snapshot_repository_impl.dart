@@ -32,6 +32,24 @@ class StatisticsSnapshotRepositoryImpl implements StatisticsSnapshotRepository, 
 
   @override
   Future<List<StatisticsSnapshot>> getSnapshotsInRange(DateTime start, DateTime end) async {
+    // `_pruneOldSnapshots` retention penceresinin (90 gün) dışındaki
+    // `synced` kayıtları yerelden siler — bu yüzden talep edilen aralık bu
+    // pencerenin dışına taşıyorsa (kullanıcı gerçekten eski bir dönem
+    // görüntülemek istiyorsa), yerelde eksik olabilecek kayıtlar Firestore'dan
+    // isteğe bağlı olarak çekilip yerele geri yazılır — aksi halde bu veri
+    // kalıcı olarak kaybolmuş gibi görünürdü (DATABASE.md §12.3'ün "arşiv"
+    // niyetine aykırı olurdu).
+    if (start.isBefore(DateTime.now().subtract(_retentionWindow)) && await _connectivity.isConnected) {
+      try {
+        final remoteSnapshots = await _remote.fetchSnapshotsInRange(start, end);
+        for (final remoteSnapshot in remoteSnapshots) {
+          final local = await _local.getBySnapshotId(remoteSnapshot.snapshotId);
+          if (local == null) await _local.putSnapshot(remoteSnapshot);
+        }
+      } catch (_) {
+        // Sessiz — yalnızca yerelde zaten var olan sonuçlarla devam edilir.
+      }
+    }
     final models = await _local.getSnapshotsInRange(start, end);
     return models.map(StatisticsSnapshotMapper.toEntity).toList();
   }

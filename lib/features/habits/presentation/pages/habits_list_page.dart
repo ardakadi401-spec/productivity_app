@@ -61,7 +61,8 @@ class HabitsListPage extends ConsumerWidget {
           padding: const EdgeInsets.all(AppSpacing.md),
           itemCount: habits.length,
           separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.sm),
-          itemBuilder: (context, index) => _HabitListItem(habit: habits[index]),
+          itemBuilder: (context, index) =>
+              _HabitListItem(key: ValueKey(habits[index].habitId), habit: habits[index]),
         );
       },
     );
@@ -69,7 +70,7 @@ class HabitsListPage extends ConsumerWidget {
 }
 
 class _HabitListItem extends ConsumerWidget {
-  const _HabitListItem({required this.habit});
+  const _HabitListItem({super.key, required this.habit});
 
   final Habit habit;
 

@@ -9,6 +9,7 @@ import 'package:productivity_app/features/tasks/domain/usecases/add_sub_task_use
 import 'package:productivity_app/features/tasks/domain/usecases/complete_sub_task_usecase.dart';
 import 'package:productivity_app/features/tasks/domain/usecases/complete_task_usecase.dart';
 import 'package:productivity_app/features/tasks/domain/usecases/create_task_usecase.dart';
+import 'package:productivity_app/features/tasks/domain/usecases/delete_sub_task_usecase.dart';
 import 'package:productivity_app/features/tasks/domain/usecases/delete_task_usecase.dart';
 import 'package:productivity_app/features/tasks/domain/usecases/get_today_tasks_usecase.dart';
 import 'package:productivity_app/features/tasks/domain/usecases/recalculate_task_progress_usecase.dart';
@@ -57,6 +58,7 @@ class _FakeTaskRepository implements TaskRepository {
   SubTask? lastAddedSubTask;
   ({String subtaskId, bool isCompleted})? lastCompleteSubTaskArgs;
   String? lastRecalculatedTaskId;
+  String? lastDeletedSubTaskId;
 
   @override
   String newTaskId() => 'generated-task-id';
@@ -122,6 +124,12 @@ class _FakeTaskRepository implements TaskRepository {
   }
 
   @override
+  Future<Result<void>> deleteSubTask(String subtaskId) async {
+    lastDeletedSubTaskId = subtaskId;
+    return voidResult!;
+  }
+
+  @override
   Future<Result<Task>> recalculateTaskProgress(String taskId) async {
     lastRecalculatedTaskId = taskId;
     return taskResult!;
@@ -150,6 +158,12 @@ void main() {
     repo.voidResult = const Ok(null);
     await DeleteTaskUseCase(repo).call('t1');
     expect(repo.lastDeletedTaskId, 't1');
+  });
+
+  test('DeleteSubTaskUseCase subtaskId\'yi iletir', () async {
+    repo.voidResult = const Ok(null);
+    await DeleteSubTaskUseCase(repo).call('s1');
+    expect(repo.lastDeletedSubTaskId, 's1');
   });
 
   test('CompleteTaskUseCase isCompleted argümanını iletir', () async {

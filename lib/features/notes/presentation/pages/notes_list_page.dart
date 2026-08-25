@@ -76,7 +76,7 @@ class NotesListPage extends ConsumerWidget {
               if (pinned.isNotEmpty) ...[
                 _SectionLabel('Sabitlenmiş'),
                 for (final note in pinned) ...[
-                  _NoteListItem(note: note),
+                  _NoteListItem(key: ValueKey(note.noteId), note: note),
                   const SizedBox(height: AppSpacing.sm),
                 ],
                 const SizedBox(height: AppSpacing.sm),
@@ -84,7 +84,7 @@ class NotesListPage extends ConsumerWidget {
               if (others.isNotEmpty) ...[
                 if (pinned.isNotEmpty) _SectionLabel('Tümü'),
                 for (final note in others) ...[
-                  _NoteListItem(note: note),
+                  _NoteListItem(key: ValueKey(note.noteId), note: note),
                   const SizedBox(height: AppSpacing.sm),
                 ],
               ],
@@ -112,7 +112,7 @@ class _SectionLabel extends StatelessWidget {
 }
 
 class _NoteListItem extends ConsumerWidget {
-  const _NoteListItem({required this.note});
+  const _NoteListItem({super.key, required this.note});
 
   final Note note;
 

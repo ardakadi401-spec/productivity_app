@@ -91,7 +91,10 @@ class _ProjectsListPageState extends ConsumerState<ProjectsListPage> {
                 padding: const EdgeInsets.all(AppSpacing.md),
                 itemCount: projects.length,
                 separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.sm),
-                itemBuilder: (context, index) => _ProjectListItem(project: projects[index]),
+                itemBuilder: (context, index) => _ProjectListItem(
+                  key: ValueKey(projects[index].projectId),
+                  project: projects[index],
+                ),
               );
             },
           ),
@@ -102,7 +105,7 @@ class _ProjectsListPageState extends ConsumerState<ProjectsListPage> {
 }
 
 class _ProjectListItem extends ConsumerWidget {
-  const _ProjectListItem({required this.project});
+  const _ProjectListItem({super.key, required this.project});
 
   final Project project;
 

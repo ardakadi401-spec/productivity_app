@@ -65,21 +65,27 @@ class TaskRepositoryImpl implements TaskRepository, SyncableRepository {
 
   @override
   Stream<List<Task>> watchTodayTasks() {
-    final now = DateTime.now();
+    return _local.watchTasks().map(
+          (models) => filterDueToday(models, DateTime.now()).map(TaskMapper.toEntity).toList(),
+        );
+  }
+
+  /// `watchTodayTasks`'ın saf filtreleme mantığı — test amaçlı public
+  /// bırakılır: `now` parametre olarak alındığından gece yarısı geçişi gibi
+  /// sınır senaryoları `DateTime.now()` bağımlılığı olmadan doğrudan test
+  /// edilebilir.
+  static List<TaskLocalModel> filterDueToday(List<TaskLocalModel> models, DateTime now) {
     final startOfDay = DateTime(now.year, now.month, now.day);
     final endOfDay = startOfDay.add(const Duration(days: 1));
-    return _local.watchTasks().map(
-          (models) => models
-              .where(
-                (m) =>
-                    !m.isDeleted &&
-                    m.dueDate != null &&
-                    !m.dueDate!.isBefore(startOfDay) &&
-                    m.dueDate!.isBefore(endOfDay),
-              )
-              .map(TaskMapper.toEntity)
-              .toList(),
-        );
+    return models
+        .where(
+          (m) =>
+              !m.isDeleted &&
+              m.dueDate != null &&
+              !m.dueDate!.isBefore(startOfDay) &&
+              m.dueDate!.isBefore(endOfDay),
+        )
+        .toList();
   }
 
   @override
@@ -111,6 +117,20 @@ class TaskRepositoryImpl implements TaskRepository, SyncableRepository {
           ..syncStatus = SyncStatusLocal.pendingDelete;
         await _local.putTask(existing);
         await _trySyncTask(existing);
+        // DATABASE.md §13.1 — bağlı alt görevler öksüz kalmasın diye üst
+        // görevle birlikte cascade soft-delete edilir.
+        final subtasks = await _local.getAllSubTasksIncludingDeleted(taskId);
+        for (final subtask in subtasks) {
+          if (subtask.isDeleted) continue;
+          subtask
+            ..isDeleted = true
+            ..deletedAt = now
+            ..updatedAt = now
+            ..localUpdatedAt = now
+            ..syncStatus = SyncStatusLocal.pendingDelete;
+          await _local.putSubTask(subtask);
+          await _trySyncSubTask(subtask);
+        }
       });
 
   @override
@@ -150,6 +170,22 @@ class TaskRepositoryImpl implements TaskRepository, SyncableRepository {
           ..updatedAt = now
           ..localUpdatedAt = now
           ..syncStatus = SyncStatusLocal.pendingUpdate;
+        await _local.putSubTask(existing);
+        await _trySyncSubTask(existing);
+        await _recalculate(existing.taskId);
+      });
+
+  @override
+  Future<Result<void>> deleteSubTask(String subtaskId) => _guard(() async {
+        final existing = await _local.getSubTaskById(subtaskId);
+        if (existing == null) throw const CacheException('Alt görev bulunamadı.');
+        final now = DateTime.now();
+        existing
+          ..isDeleted = true
+          ..deletedAt = now
+          ..updatedAt = now
+          ..localUpdatedAt = now
+          ..syncStatus = SyncStatusLocal.pendingDelete;
         await _local.putSubTask(existing);
         await _trySyncSubTask(existing);
         await _recalculate(existing.taskId);

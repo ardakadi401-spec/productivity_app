@@ -12,6 +12,7 @@ import '../../domain/usecases/add_sub_task_usecase.dart';
 import '../../domain/usecases/complete_sub_task_usecase.dart';
 import '../../domain/usecases/complete_task_usecase.dart';
 import '../../domain/usecases/create_task_usecase.dart';
+import '../../domain/usecases/delete_sub_task_usecase.dart';
 import '../../domain/usecases/delete_task_usecase.dart';
 import '../../domain/usecases/get_today_tasks_usecase.dart';
 import '../../domain/usecases/recalculate_task_progress_usecase.dart';
@@ -86,6 +87,10 @@ final addSubTaskUseCaseProvider = Provider<AddSubTaskUseCase>((ref) {
 
 final completeSubTaskUseCaseProvider = Provider<CompleteSubTaskUseCase>((ref) {
   return CompleteSubTaskUseCase(ref.watch(taskRepositoryProvider));
+});
+
+final deleteSubTaskUseCaseProvider = Provider<DeleteSubTaskUseCase>((ref) {
+  return DeleteSubTaskUseCase(ref.watch(taskRepositoryProvider));
 });
 
 final recalculateTaskProgressUseCaseProvider = Provider<RecalculateTaskProgressUseCase>((ref) {

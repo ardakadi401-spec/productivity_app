@@ -50,6 +50,8 @@ class _EmptyTaskRepository implements TaskRepository {
   Future<Result<void>> setSubTaskCompleted(String subtaskId, {required bool isCompleted}) =>
       throw UnimplementedError();
   @override
+  Future<Result<void>> deleteSubTask(String subtaskId) => throw UnimplementedError();
+  @override
   Future<Result<Task>> recalculateTaskProgress(String taskId) => throw UnimplementedError();
 }
 
@@ -61,6 +63,8 @@ class _FakeNotificationRepository implements NotificationRepository {
   Future<void> initialize() async {}
   @override
   Future<bool> requestPermission() async => true;
+  @override
+  Future<bool> areNotificationsEnabled() async => true;
   @override
   Future<void> scheduleNotification(NotificationRequest request) async {}
   @override

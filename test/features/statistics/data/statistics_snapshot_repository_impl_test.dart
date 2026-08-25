@@ -155,4 +155,36 @@ void main() {
     expect(result, hasLength(1));
     expect(result.single.date, DateTime(2026, 1, 3));
   });
+
+  group('getSnapshotsInRange — retention penceresi dışına düşen (90+ gün önce) aralıklar', () {
+    test('bağlantı varsa Firestore\'dan çekip yerele geri yazar (arşiv veri kaybolmaz)', () async {
+      final farStart = DateTime.now().subtract(const Duration(days: 200));
+      final farEnd = DateTime.now().subtract(const Duration(days: 190));
+      when(() => connectivity.isConnected).thenAnswer((_) async => true);
+      when(() => remote.fetchSnapshotsInRange(farStart, farEnd))
+          .thenAnswer((_) async => [_model(date: farStart)]);
+      when(() => local.getBySnapshotId(any())).thenAnswer((_) async => null);
+      when(() => local.putSnapshot(any())).thenAnswer((_) async {});
+      when(() => local.getSnapshotsInRange(farStart, farEnd))
+          .thenAnswer((_) async => [_model(date: farStart)]);
+
+      final result = await repository.getSnapshotsInRange(farStart, farEnd);
+
+      verify(() => remote.fetchSnapshotsInRange(farStart, farEnd)).called(1);
+      verify(() => local.putSnapshot(any())).called(1);
+      expect(result, hasLength(1));
+    });
+
+    test('bağlantı yoksa remote\'a hiç istek atmadan yalnızca yereldeki (varsa) sonuçla döner', () async {
+      final farStart = DateTime.now().subtract(const Duration(days: 200));
+      final farEnd = DateTime.now().subtract(const Duration(days: 190));
+      when(() => connectivity.isConnected).thenAnswer((_) async => false);
+      when(() => local.getSnapshotsInRange(farStart, farEnd)).thenAnswer((_) async => []);
+
+      final result = await repository.getSnapshotsInRange(farStart, farEnd);
+
+      verifyNever(() => remote.fetchSnapshotsInRange(any(), any()));
+      expect(result, isEmpty);
+    });
+  });
 }

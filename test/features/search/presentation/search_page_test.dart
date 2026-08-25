@@ -52,6 +52,8 @@ class _StubTaskRepository implements TaskRepository {
   Future<Result<void>> setSubTaskCompleted(String subtaskId, {required bool isCompleted}) =>
       throw UnimplementedError();
   @override
+  Future<Result<void>> deleteSubTask(String subtaskId) => throw UnimplementedError();
+  @override
   Future<Result<Task>> recalculateTaskProgress(String taskId) => throw UnimplementedError();
 }
 

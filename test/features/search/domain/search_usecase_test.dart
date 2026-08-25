@@ -48,6 +48,8 @@ class _FakeTaskRepository implements TaskRepository {
   Future<Result<void>> setSubTaskCompleted(String subtaskId, {required bool isCompleted}) =>
       throw UnimplementedError();
   @override
+  Future<Result<void>> deleteSubTask(String subtaskId) => throw UnimplementedError();
+  @override
   Future<Result<Task>> recalculateTaskProgress(String taskId) => throw UnimplementedError();
 }
 
@@ -263,4 +265,34 @@ void main() {
 
     expect(result, hasLength(2));
   });
+
+  test(
+    'ROADMAP FAZ 12 test noktası — büyük veri setinde (500+ görev/proje/not/alışkanlık) '
+    'arama makul sürede (1 saniye altında) sonuç döner',
+    () async {
+      taskRepo.tasks = [
+        for (var i = 0; i < 500; i++) _task(taskId: 't$i', title: 'Görev $i market alışverişi'),
+      ];
+      projectRepo.projects = [
+        for (var i = 0; i < 500; i++) _project(projectId: 'p$i', title: 'Proje $i market'),
+      ];
+      noteRepo.notes = [
+        for (var i = 0; i < 500; i++) _note(noteId: 'n$i', title: 'Not $i market listesi'),
+      ];
+      habitRepo.habits = [
+        for (var i = 0; i < 500; i++) _habit(habitId: 'h$i', name: 'Alışkanlık $i markete gitme'),
+      ];
+
+      final stopwatch = Stopwatch()..start();
+      final result = await buildUseCase().call(query: 'market');
+      stopwatch.stop();
+
+      expect(result, hasLength(2000));
+      expect(
+        stopwatch.elapsedMilliseconds,
+        lessThan(1000),
+        reason: '2000 kayıtta arama 1 saniyeyi aştı: ${stopwatch.elapsedMilliseconds}ms',
+      );
+    },
+  );
 }

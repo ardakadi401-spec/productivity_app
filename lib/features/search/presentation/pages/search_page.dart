@@ -203,14 +203,15 @@ class _ResultsList extends StatelessWidget {
             ),
           );
         }
-        return _SearchResultTile(result: results[index]);
+        final result = results[index];
+        return _SearchResultTile(key: ValueKey('${result.type}:${result.id}'), result: result);
       },
     );
   }
 }
 
 class _SearchResultTile extends StatelessWidget {
-  const _SearchResultTile({required this.result});
+  const _SearchResultTile({super.key, required this.result});
 
   final SearchResult result;
 

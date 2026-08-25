@@ -90,7 +90,8 @@ class _GoalsListPageState extends ConsumerState<GoalsListPage> {
                 padding: const EdgeInsets.all(AppSpacing.md),
                 itemCount: goals.length,
                 separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.sm),
-                itemBuilder: (context, index) => _GoalListItem(goal: goals[index]),
+                itemBuilder: (context, index) =>
+                    _GoalListItem(key: ValueKey(goals[index].goalId), goal: goals[index]),
               );
             },
           ),
@@ -101,7 +102,7 @@ class _GoalsListPageState extends ConsumerState<GoalsListPage> {
 }
 
 class _GoalListItem extends ConsumerWidget {
-  const _GoalListItem({required this.goal});
+  const _GoalListItem({super.key, required this.goal});
 
   final Goal goal;
 

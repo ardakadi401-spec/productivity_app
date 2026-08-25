@@ -133,7 +133,11 @@ class _TasksListPageState extends ConsumerState<TasksListPage> {
                 padding: const EdgeInsets.all(AppSpacing.md),
                 itemCount: tasks.length,
                 separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.sm),
-                itemBuilder: (context, index) => _TaskListItem(task: tasks[index], filter: _filter),
+                itemBuilder: (context, index) => _TaskListItem(
+                  key: ValueKey(tasks[index].taskId),
+                  task: tasks[index],
+                  filter: _filter,
+                ),
               );
             },
           ),
@@ -203,7 +207,7 @@ class _TasksListPageState extends ConsumerState<TasksListPage> {
 }
 
 class _TaskListItem extends ConsumerWidget {
-  const _TaskListItem({required this.task, required this.filter});
+  const _TaskListItem({super.key, required this.task, required this.filter});
 
   final Task task;
   final TaskFilter filter;

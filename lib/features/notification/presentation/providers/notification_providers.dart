@@ -30,3 +30,13 @@ final cancelNotificationUseCaseProvider = Provider<CancelNotificationUseCase>((r
 final requestNotificationPermissionUseCaseProvider = Provider<RequestNotificationPermissionUseCase>((ref) {
   return RequestNotificationPermissionUseCase(ref.watch(notificationRepositoryProvider));
 });
+
+// --- Presentation katmanı — reaktif okuma provider'ı ---
+
+/// Settings Screen'in "izin sistem ayarlarından sonradan iptal edildi mi"
+/// denetimi için — bir izin İSTEĞİ TETİKLEMEZ, yalnızca mevcut OS durumunu
+/// okur. `autoDispose`: ekrandan her çıkışta temizlenir, her yeniden girişte
+/// güncel durum tazelenir.
+final osNotificationsEnabledProvider = FutureProvider.autoDispose<bool>((ref) {
+  return ref.watch(notificationRepositoryProvider).areNotificationsEnabled();
+});

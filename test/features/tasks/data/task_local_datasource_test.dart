@@ -50,7 +50,12 @@ void main() {
       ..localUpdatedAt = now;
   }
 
-  SubTaskLocalModel subTask({String subtaskId = 's1', String taskId = 't1', int order = 0}) {
+  SubTaskLocalModel subTask({
+    String subtaskId = 's1',
+    String taskId = 't1',
+    int order = 0,
+    bool isDeleted = false,
+  }) {
     final now = DateTime(2026, 1, 1);
     return SubTaskLocalModel()
       ..subtaskId = subtaskId
@@ -60,6 +65,7 @@ void main() {
       ..order = order
       ..createdAt = now
       ..updatedAt = now
+      ..isDeleted = isDeleted
       ..syncStatus = SyncStatusLocal.pendingCreate
       ..localUpdatedAt = now;
   }
