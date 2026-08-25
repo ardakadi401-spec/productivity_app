@@ -18,13 +18,16 @@ import '../../features/notes/presentation/pages/notes_list_page.dart';
 import '../../features/pomodoro/presentation/pages/pomodoro_page.dart';
 import '../../features/projects/presentation/pages/project_detail_page.dart';
 import '../../features/search/presentation/pages/search_page.dart';
+import '../../features/settings/presentation/pages/lock_page.dart';
 import '../../features/settings/presentation/pages/settings_page.dart';
+import '../../features/settings/presentation/providers/lock_providers.dart';
 import '../../features/statistics/presentation/pages/statistics_page.dart';
 import '../../features/tasks/domain/entities/task.dart';
 import '../../features/tasks/presentation/pages/create_task_page.dart';
 import '../../features/tasks/presentation/pages/edit_task_page.dart';
 import '../../features/tasks/presentation/pages/task_detail_page.dart';
 import '../guards/auth_guard.dart';
+import '../guards/lock_guard.dart';
 import '../route_paths/route_paths.dart';
 import 'app_shell.dart';
 import 'component_gallery_screen.dart';
@@ -49,13 +52,25 @@ final routerProvider = Provider<GoRouter>((ref) {
   final refreshNotifier = _GoRouterRefreshNotifier();
   ref.onDispose(refreshNotifier.dispose);
   ref.listen(authStateProvider, (previous, next) => refreshNotifier.refresh());
+  // FAZ 15 — `appLockStateProvider` değiştiğinde (kilit ekranı tetiklendiğinde
+  // veya doğrulama başarılı olduğunda) `redirect` yeniden değerlendirilsin
+  // diye aynı yenileyiciye bağlanır — Auth Guard ile birebir aynı desen.
+  ref.listen(appLockStateProvider, (previous, next) => refreshNotifier.refresh());
 
   return GoRouter(
     initialLocation: RoutePaths.splash,
     refreshListenable: refreshNotifier,
     redirect: (context, state) {
       final authState = ref.read(authStateProvider);
-      return authGuardRedirect(authState: authState, location: state.matchedLocation);
+      final authRedirect =
+          authGuardRedirect(authState: authState, location: state.matchedLocation);
+      if (authRedirect != null) return authRedirect;
+
+      return lockGuardRedirect(
+        isLocked: ref.read(appLockStateProvider),
+        isAuthenticated: authState.valueOrNull != null,
+        location: state.matchedLocation,
+      );
     },
     routes: [
       GoRoute(path: RoutePaths.splash, builder: (context, state) => const SplashPage()),
@@ -106,11 +121,12 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) =>
             ProjectDetailPage(projectId: state.pathParameters['projectId']!),
       ),
-      GoRoute(
-        path: RoutePaths.taskDetail,
-        builder: (context, state) =>
-            TaskDetailPage(taskId: state.pathParameters['taskId']!),
-      ),
+      // NOT: `createTask` ('/tasks/new'), `taskDetail` ('/tasks/:taskId')'DAN
+      // ÖNCE tanımlanmalıdır — GoRouter kardeş rotaları tanım sırasına göre
+      // eşler (statik segmenti otomatik önceliklendirmez); ters sırada
+      // '/tasks/new' her zaman taskId="new" ile taskDetail'e eşleşir ve
+      // CreateTaskPage'e asla ulaşılamaz (canlı cihaz testinde bulunan,
+      // FAZ 5'ten beri var olan gerçek bir hataydı).
       GoRoute(
         path: RoutePaths.createTask,
         // Project Detail (proje önceden seçili, SCREENS.md §4.8) ve Calendar
@@ -123,6 +139,11 @@ final routerProvider = Provider<GoRouter>((ref) {
             initialDueDate: args?.dueDate,
           );
         },
+      ),
+      GoRoute(
+        path: RoutePaths.taskDetail,
+        builder: (context, state) =>
+            TaskDetailPage(taskId: state.pathParameters['taskId']!),
       ),
       GoRoute(
         path: RoutePaths.editTask,
@@ -159,8 +180,9 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: RoutePaths.statistics, builder: (context, state) => const StatisticsPage()),
       GoRoute(path: RoutePaths.search, builder: (context, state) => const SearchPage()),
       _placeholderRoute(RoutePaths.profile),
-      // Shell dışı bağımsız rota — ARCHITECTURE.md §9.3, tam işlevi FAZ 15'te.
-      _placeholderRoute(RoutePaths.lock),
+      // Shell dışı bağımsız rota — ARCHITECTURE.md §9.3. FAZ 15 ile tam
+      // işlevsel: `lockGuardRedirect` kilitliyken buraya yönlendirir.
+      GoRoute(path: RoutePaths.lock, builder: (context, state) => const LockPage()),
       // FAZ 2 doğrulama rotası — 23 resmi ekranın dışında, geçici/dev-only.
       GoRoute(
         path: '/dev/components',

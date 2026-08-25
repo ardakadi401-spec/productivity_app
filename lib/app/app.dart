@@ -7,6 +7,7 @@ import '../core/sync/sync_coordinator.dart';
 import '../core/theme/app_theme.dart';
 import '../core/theme/theme_mode_provider.dart';
 import '../features/notification/presentation/providers/notification_providers.dart';
+import '../features/settings/presentation/providers/lock_providers.dart';
 import '../routes/app_router/app_router.dart';
 
 /// Uygulama kök widget'ı — FOLDER_STRUCTURE.md Bölüm 1.1'de tanımlanan
@@ -36,6 +37,9 @@ class _ProductivityAppState extends ConsumerState<ProductivityApp> with WidgetsB
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) => _wireNotificationNavigation());
+    // PRD §5.7 — soğuk başlatmada da kilit aktifse kilit ekranı gösterilmeli
+    // ("Uygulama Arka Plana Alınır / Yeniden Açılır" ikisi de tetikleyici).
+    unawaited(_checkLockOnStart());
   }
 
   /// FAZ 14 — app resume tetikleyicisi (ROADMAP.md §3 "app resume" tetikleyici
@@ -43,10 +47,29 @@ class _ProductivityAppState extends ConsumerState<ProductivityApp> with WidgetsB
   /// `SyncCoordinator.syncIfOnline` zaten yalnızca bilinen son durum
   /// online'sa bir şey yapar — her resume'da koşulsuz senkronizasyon
   /// ZORLANMAZ.
+  ///
+  /// FAZ 15 — aynı `resumed` sinyali, kilit aktifse kilit ekranını de
+  /// tetikler (ARCHITECTURE.md §13.5, PRD §5.7).
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       unawaited(ref.read(syncCoordinatorProvider).syncIfOnline());
+      unawaited(_checkLockOnStart());
+    }
+  }
+
+  /// Kilit yöntemi yapılandırılmışsa (`LockSettings.isEnabled`)
+  /// `appLockStateProvider`'ı `true` yapar — `lockGuardRedirect` bunu görüp
+  /// kullanıcıyı `/lock`'a yönlendirir. Kilit yapılandırılmamışsa (varsayılan)
+  /// hiçbir şey yapmaz.
+  Future<void> _checkLockOnStart() async {
+    try {
+      final settings = await ref.read(lockSettingsProvider.future);
+      if (settings.isEnabled) {
+        ref.read(appLockStateProvider.notifier).state = true;
+      }
+    } catch (_) {
+      // Sessiz — okunamazsa güvenli varsayılan (kilitsiz) korunur.
     }
   }
 

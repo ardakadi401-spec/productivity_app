@@ -45,6 +45,8 @@ class _EmptyTaskRepository implements TaskRepository {
   Future<Result<void>> setSubTaskCompleted(String subtaskId, {required bool isCompleted}) =>
       throw UnimplementedError();
   @override
+  Future<Result<void>> deleteSubTask(String subtaskId) => throw UnimplementedError();
+  @override
   Future<Result<Task>> recalculateTaskProgress(String taskId) => throw UnimplementedError();
 }
 
@@ -137,4 +139,22 @@ void main() {
     final scaffoldBg = Theme.of(tester.element(find.text('Tema'))).scaffoldBackgroundColor;
     expect(scaffoldBg, const Color(0xFF000000));
   });
+
+  testWidgets(
+    "Dashboard 'Görev Ekle' gerçekten Create Task ekranına gider "
+    "(regresyon — GoRouter'da '/tasks/:taskId', '/tasks/new'DAN önce "
+    'tanımlıyken taskId="new" ile taskDetail\'e eşleşip "Bu görev artık '
+    'mevcut değil" gösteriyordu; canlı cihaz testinde bulunan gerçek hata)',
+    (tester) async {
+      final fake = FakeAuthRepository()..authStateValue = testUser;
+      await tester.pumpWidget(_wrap(fake));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Görev Ekle'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Yeni Görev'), findsOneWidget);
+      expect(find.text('Bu görev artık mevcut değil.'), findsNothing);
+    },
+  );
 }
