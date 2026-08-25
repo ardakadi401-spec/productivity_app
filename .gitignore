@@ -43,3 +43,17 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# FAZ 15 — Firestore Rules emulator test araçları (Node, Flutter'dan izole)
+firestore-tests/node_modules/
+firestore-debug.log
+firebase-debug.log
+.firebase/
+
+# FAZ 18 — Release imzalama sırları. Bu dosyalar ASLA commit edilmez —
+# keystore kaybı gelecekteki tüm uygulama güncellemelerinin yayınlanamaz
+# hale gelmesi anlamına gelir; şifreler ayrıca güvenli, repo dışı bir
+# konumda (parola yöneticisi vb.) yedeklenmelidir.
+android/key.properties
+android/app/*.jks
+android/app/*.keystore

@@ -849,6 +849,15 @@ PRD Bölüm 6.15 ve `ARCHITECTURE.md` Bölüm 13'te tanımlanan güvenlik mimari
 - Offline→online senkronizasyon entegrasyon testi, bağlantı simülasyonuyla (mock connectivity) tutarlı sonuç veriyor mu?
 - Test kapsamı raporu, Domain katmanında tanımlı minimum eşiğin altına düşen bir feature olduğunda bunu görünür kılıyor mu?
 
+### Bilinen Test Kapsamı Dışı Alanlar (`STATE_MANAGEMENT.md` §13.4)
+Aşağıdaki alanlar, otomatik test paketinin (`flutter test`, `firestore-tests/`) doğası gereği kapsamı dışındadır — gerçek donanım/gerçek OS entegrasyonu gerektirdiklerinden CI'da otomatikleştirilmemiştir. FAZ 18'in Final QA aşamasına devredilir:
+- **Gerçek cihaz bildirim testleri:** `flutter_local_notifications`'ın native zamanlama/gösterim davranışı ve bildirime dokunarak uygulamayı açma zinciri (yalnızca `NotificationRepository` sözleşmesi sahte implementasyonla test edilir, gerçek OS bildirim merkezi değil).
+- **Biyometrik donanım testleri:** Gerçek parmak izi/yüz tanıma donanımıyla `BiometricPrompt` akışı (`local_auth`, testlerde sahte sonuç döndürecek şekilde override edilir — bkz. `lock_page_test.dart`/`lock_screen_flow_test.dart`, gerçek donanım UI'ı hiç tetiklenmez).
+- **Google Sign-In OAuth tam akışı:** Gerçek Google hesabıyla Credential Manager UI'ı (FAZ 15 kapsamında bir kez canlı Android cihazda manuel doğrulandı — bkz. proje hafızası; otomatik teste alınmadı).
+- **Çoklu cihaz eşzamanlı senkronizasyon:** `SyncCoordinator`/`TaskRepositoryImpl.syncPending()` zinciri `sync_coordinator_task_integration_test.dart`'ta sahte bağlantı/datasource'larla test edilir; gerçek ağ gecikmesi ve gerçek çoklu-cihaz eşzamanlı yazma çakışma senaryoları (Last-Write-Wins'in gerçek zamanlamayla doğrulanması) manuel QA'ya devredilir.
+- **Gerçek cihaz performansı:** Soğuk başlatma süresi, animasyon akıcılığı (frame rate), düşük-orta segment Android cihaz davranışı — bu FAZ'ın değil, FAZ 17 (Optimization)'nin konusudur.
+- **iOS platformu uçtan uca akışlar:** Bu oturuma kadar yalnızca Android (emulator + gerçek cihaz) üzerinde uçtan uca doğrulama yapıldı; iOS'ta gerçek cihaz/simülatör testi FAZ 18 Final QA'da ele alınmalıdır.
+
 ---
 
 ## FAZ 17 — Optimization

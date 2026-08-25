@@ -32,8 +32,29 @@ jobs:
       - name: Analyze
         run: flutter analyze
 
-      - name: Test
-        run: flutter test
+      - name: Test with coverage
+        run: flutter test --coverage
+
+      - name: Coverage summary
+        # ROADMAP.md FAZ 16 "Test kapsamı raporlamasının CI pipeline'a
+        # entegre edilmesi" — harici bir servis/hesap gerektirmeden, Domain
+        # (%90+) ve Data (%70+) katman eşiklerine (Bölüm 19.3) göre satır
+        # kapsamını CI loguna ve iş özetine yazar. `.g.dart` (üretilmiş kod)
+        # hariç tutulur.
+        run: |
+          sudo apt-get update -y && sudo apt-get install -y lcov
+          lcov --remove coverage/lcov.info '*.g.dart' -o coverage/lcov.filtered.info
+          echo '## Test Coverage' >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          lcov --summary coverage/lcov.filtered.info 2>&1 | tee -a "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage/lcov.filtered.info
+          retention-days: 14
 
       - name: Build debug APK
         run: flutter build apk --debug

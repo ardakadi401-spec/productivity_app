@@ -1,0 +1,37 @@
+rules_version = '2';
+
+// ARCHITECTURE.md §13.2 / DATABASE.md §16 — "Bir kullanıcı, yalnızca kendi
+// users/{userId} alt ağacındaki belgelere erişebilir." Tüm veri modeli
+// (Projects, Tasks/SubTasks, Habits/HabitRecords, Goals, Notes, Tags,
+// PomodoroSessions, StatisticsSnapshots, Settings-alanları) `users/{userId}`
+// altında yaşadığından (bkz. DATABASE.md §1.2 "kullanıcı alt koleksiyonu
+// modeli"), tek bir path segmenti karşılaştırması TÜM koleksiyonları kapsar
+// — DATABASE.md §16.1'in kendi tarif ettiği tasarım budur, yeni bir karar
+// değildir.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // `users/{userId}` belgesinin kendisi — Settings alanları (tema,
+    // bildirim tercihleri, syncStatus vb.) doğrudan bu belgede yaşar
+    // (bkz. settings_remote_datasource.dart: users/{uid} üzerinde `set`).
+    match /users/{userId} {
+      allow read, write: if isOwner(userId);
+
+      // Projects, Tasks (+ subtasks alt koleksiyonu), Habits (+
+      // habitRecords), Goals, Notes, Tags, PomodoroSessions,
+      // StatisticsSnapshots ve gelecekte eklenebilecek herhangi bir alt
+      // koleksiyon — hepsi bu tek kuralla kapsanır (DATABASE.md §16.1).
+      match /{document=**} {
+        allow read, write: if isOwner(userId);
+      }
+    }
+
+    // `users` dışında kök seviyede tanımlı hiçbir koleksiyon yok
+    // (DATABASE.md §16.2) — bu yüzden başka bir eşleşme kuralı gerekmez;
+    // yukarıdakiler dışında her şey varsayılan olarak (Firestore Rules'un
+    // "aksi belirtilmedikçe reddet" ilkesi gereği) reddedilir.
+
+    function isOwner(userId) {
+      return request.auth != null && request.auth.uid == userId;
+    }
+  }
+}
