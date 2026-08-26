@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:productivity_app/app/reschedule_all_notifications.dart';
 import 'package:productivity_app/core/errors/result.dart';
 import 'package:productivity_app/core/theme/app_theme_mode.dart';
+import 'package:productivity_app/features/settings/domain/entities/pomodoro_duration_settings.dart';
 import 'package:productivity_app/features/habits/domain/entities/habit.dart';
 import 'package:productivity_app/features/habits/domain/entities/habit_record.dart';
 import 'package:productivity_app/features/habits/domain/repositories/habit_repository.dart';
@@ -31,6 +32,12 @@ class _FakeSettingsRepository implements SettingsRepository {
   Stream<AppThemeMode> watchThemeMode() => Stream.value(AppThemeMode.system);
   @override
   Future<Result<void>> updateThemeMode(AppThemeMode mode) => throw UnimplementedError();
+  @override
+  Stream<PomodoroDurationSettings> watchPomodoroDurationSettings() =>
+      Stream.value(PomodoroDurationSettings.defaults);
+  @override
+  Future<Result<void>> updatePomodoroDurationSettings(PomodoroDurationSettings settings) =>
+      throw UnimplementedError();
 }
 
 class _FakeNotificationRepository implements NotificationRepository {

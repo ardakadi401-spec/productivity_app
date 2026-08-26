@@ -8,10 +8,12 @@ import 'package:productivity_app/core/errors/result.dart';
 import 'package:productivity_app/core/theme/app_theme.dart';
 import 'package:productivity_app/core/theme/app_theme_mode.dart';
 import 'package:productivity_app/core/theme/theme_mode_provider.dart';
+import 'package:productivity_app/shared/components/app_chip.dart';
 import 'package:productivity_app/features/notification/domain/entities/notification_request.dart';
 import 'package:productivity_app/features/notification/domain/repositories/notification_repository.dart';
 import 'package:productivity_app/features/notification/presentation/providers/notification_providers.dart';
 import 'package:productivity_app/features/settings/domain/entities/notification_preferences.dart';
+import 'package:productivity_app/features/settings/domain/entities/pomodoro_duration_settings.dart';
 import 'package:productivity_app/features/settings/domain/repositories/settings_repository.dart';
 import 'package:productivity_app/features/authentication/presentation/providers/auth_providers.dart';
 import 'package:productivity_app/features/settings/presentation/pages/settings_page.dart';
@@ -61,6 +63,26 @@ class _FakeSettingsRepository implements SettingsRepository {
   @override
   Future<Result<void>> updateThemeMode(AppThemeMode mode) async {
     themeModeUpdateCalls.add(mode);
+    return const Ok(null);
+  }
+
+  PomodoroDurationSettings pomodoroDurations = PomodoroDurationSettings.defaults;
+  final _pomodoroController = StreamController<PomodoroDurationSettings>.broadcast();
+  final List<PomodoroDurationSettings> pomodoroUpdateCalls = [];
+
+  @override
+  Stream<PomodoroDurationSettings> watchPomodoroDurationSettings() =>
+      Stream<PomodoroDurationSettings>.multi((controller) {
+        controller.add(pomodoroDurations);
+        final subscription = _pomodoroController.stream.listen(controller.add);
+        controller.onCancel = subscription.cancel;
+      });
+
+  @override
+  Future<Result<void>> updatePomodoroDurationSettings(PomodoroDurationSettings settings) async {
+    pomodoroUpdateCalls.add(settings);
+    pomodoroDurations = settings;
+    _pomodoroController.add(settings);
     return const Ok(null);
   }
 }
@@ -239,6 +261,43 @@ void main() {
         find.text('Bildirim izni sistem ayarlarından kapatılmış — hatırlatmalar gösterilmeyecek.'),
         findsNothing,
       );
+    });
+  });
+
+  group('Pomodoro varsayılan süreleri', () {
+    testWidgets('kalıcı ayarlardaki değer seçili olarak gösterilir', (tester) async {
+      final settings = _FakeSettingsRepository()
+        ..pomodoroDurations = const PomodoroDurationSettings(workMinutes: 45, breakMinutes: 15);
+      final notification = _FakeNotificationRepository();
+      await tester.pumpWidget(_wrapWithNotificationFakes(settings, notification));
+      await tester.pumpAndSettle();
+      // "Pomodoro" bölümü, üstündeki Tema/Hesap/Bildirimler bölümleri
+      // nedeniyle varsayılan test viewport'unda (800x600) `ListView`'in
+      // cacheExtent'inin ötesinde kalır — off-screen bir sliver elemanı,
+      // `ensureVisible`'ın aksine, kaydırılana kadar ağaçta HİÇ mevcut
+      // olmaz; bu yüzden bulunana kadar adım adım kaydıran
+      // `scrollUntilVisible` gerekir.
+      await tester.scrollUntilVisible(find.widgetWithText(AppChip, '45'), 200);
+      await tester.pumpAndSettle();
+
+      final workChip = tester.widget<AppChip>(find.widgetWithText(AppChip, '45'));
+      expect(workChip.selected, isTrue);
+    });
+
+    testWidgets('bir süre seçeneğine dokununca updatePomodoroDurationSettings çağrılır', (tester) async {
+      final settings = _FakeSettingsRepository();
+      final notification = _FakeNotificationRepository();
+      await tester.pumpWidget(_wrapWithNotificationFakes(settings, notification));
+      await tester.pumpAndSettle();
+      await tester.scrollUntilVisible(find.widgetWithText(AppChip, '45'), 200);
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.widgetWithText(AppChip, '45'));
+      await tester.pumpAndSettle();
+
+      expect(settings.pomodoroUpdateCalls, hasLength(1));
+      expect(settings.pomodoroUpdateCalls.single.workMinutes, 45);
+      expect(settings.pomodoroUpdateCalls.single.breakMinutes, 5);
     });
   });
 

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:productivity_app/core/errors/result.dart';
@@ -12,6 +14,7 @@ import 'package:productivity_app/features/pomodoro/domain/utils/pomodoro_timer_s
 import 'package:productivity_app/features/pomodoro/presentation/controllers/pomodoro_timer_controller.dart';
 import 'package:productivity_app/features/pomodoro/presentation/providers/pomodoro_providers.dart';
 import 'package:productivity_app/features/settings/domain/entities/notification_preferences.dart';
+import 'package:productivity_app/features/settings/domain/entities/pomodoro_duration_settings.dart';
 import 'package:productivity_app/features/settings/domain/repositories/settings_repository.dart';
 import 'package:productivity_app/features/settings/presentation/providers/settings_providers.dart';
 
@@ -75,6 +78,7 @@ class _FakePomodoroRepository implements PomodoroRepository {
 
 class _FakeSettingsRepository implements SettingsRepository {
   NotificationPreferences preferences = NotificationPreferences.defaults;
+  PomodoroDurationSettings pomodoroDurations = PomodoroDurationSettings.defaults;
 
   @override
   Stream<NotificationPreferences> watchNotificationPreferences() => Stream.value(preferences);
@@ -86,6 +90,23 @@ class _FakeSettingsRepository implements SettingsRepository {
   Stream<AppThemeMode> watchThemeMode() => Stream.value(AppThemeMode.system);
   @override
   Future<Result<void>> updateThemeMode(AppThemeMode mode) => throw UnimplementedError();
+
+  /// Ayarlandığında `watchPomodoroDurationSettings()`, bu tamamlanana kadar
+  /// hiçbir değer yaymaz — hydration'ın `start()`'la yarışını
+  /// deterministik hale getirmek için (bkz. "çalışan zamanlayıcı
+  /// bozulmaz" testi).
+  Completer<void>? pomodoroHydrationGate;
+
+  @override
+  Stream<PomodoroDurationSettings> watchPomodoroDurationSettings() async* {
+    final gate = pomodoroHydrationGate;
+    if (gate != null) await gate.future;
+    yield pomodoroDurations;
+  }
+
+  @override
+  Future<Result<void>> updatePomodoroDurationSettings(PomodoroDurationSettings settings) =>
+      throw UnimplementedError();
 }
 
 class _FakeNotificationRepository implements NotificationRepository {
@@ -316,6 +337,50 @@ void main() {
     await controller().start();
     controller().setWorkDuration(const Duration(minutes: 10));
     expect(state().workDuration, const Duration(minutes: 50), reason: 'Çalışırken süre değişmemeli');
+  });
+
+  group('kalıcı Pomodoro varsayılan süreleri (Settings Screen)', () {
+    test('build() sonrası kalıcı ayarlardaki özel süreler hydrate edilir', () async {
+      settingsRepo.pomodoroDurations = const PomodoroDurationSettings(workMinutes: 45, breakMinutes: 15);
+
+      controller(); // build() tetiklenir, hydration unawaited başlar.
+      await Future<void>.delayed(Duration.zero);
+
+      expect(state().workDuration, const Duration(minutes: 45));
+      expect(state().breakDuration, const Duration(minutes: 15));
+      expect(state().remaining, const Duration(minutes: 45));
+    });
+
+    test(
+      'hydration tamamlanmadan önce setWorkDuration çağrılırsa kullanıcının seçimi ezilmez',
+      () async {
+        settingsRepo.pomodoroDurations = const PomodoroDurationSettings(workMinutes: 45, breakMinutes: 15);
+
+        controller().setWorkDuration(const Duration(minutes: 10));
+        await Future<void>.delayed(Duration.zero);
+
+        expect(state().workDuration, const Duration(minutes: 10));
+      },
+    );
+
+    test('hydration tamamlanmadan önce oturum başlatılırsa çalışan zamanlayıcı bozulmaz', () async {
+      // Hydration'ı bilerek kapıda bekletiyoruz ki `start()`'ın state'i
+      // `running`e taşıması KESİN olarak hydration'ın state'i okumasından
+      // ÖNCE gerçekleşsin — gerçek yarış koşulunu iki olası sıralamadan
+      // birine (aksi halde flaky olurdu) deterministik şekilde sabitler.
+      final gate = Completer<void>();
+      settingsRepo.pomodoroHydrationGate = gate;
+      settingsRepo.pomodoroDurations = const PomodoroDurationSettings(workMinutes: 45, breakMinutes: 15);
+
+      await controller().start();
+      expect(state().isRunning, isTrue);
+
+      gate.complete();
+      await Future<void>.delayed(Duration.zero);
+
+      expect(state().workDuration, const Duration(minutes: 25), reason: 'Hydration çalışan oturumu değiştirmemeli');
+      expect(state().isRunning, isTrue);
+    });
   });
 
   group('bildirim planlama/iptal (ROADMAP FAZ 13)', () {

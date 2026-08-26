@@ -11,6 +11,7 @@ import 'package:productivity_app/features/tasks/domain/entities/task.dart';
 import 'package:productivity_app/features/tasks/domain/usecases/sync_task_reminder_usecase.dart';
 import 'package:productivity_app/core/errors/result.dart';
 import 'package:productivity_app/core/theme/app_theme_mode.dart';
+import 'package:productivity_app/features/settings/domain/entities/pomodoro_duration_settings.dart';
 
 class _FakeSettingsRepository implements SettingsRepository {
   NotificationPreferences preferences = NotificationPreferences.defaults;
@@ -25,6 +26,12 @@ class _FakeSettingsRepository implements SettingsRepository {
   Stream<AppThemeMode> watchThemeMode() => Stream.value(AppThemeMode.system);
   @override
   Future<Result<void>> updateThemeMode(AppThemeMode mode) => throw UnimplementedError();
+  @override
+  Stream<PomodoroDurationSettings> watchPomodoroDurationSettings() =>
+      Stream.value(PomodoroDurationSettings.defaults);
+  @override
+  Future<Result<void>> updatePomodoroDurationSettings(PomodoroDurationSettings settings) =>
+      throw UnimplementedError();
 }
 
 class _FakeNotificationRepository implements NotificationRepository {

@@ -9,6 +9,7 @@ import 'package:productivity_app/features/notification/domain/usecases/cancel_no
 import 'package:productivity_app/features/notification/domain/usecases/schedule_notification_usecase.dart';
 import 'package:productivity_app/features/notification/domain/utils/notification_id.dart';
 import 'package:productivity_app/features/settings/domain/entities/notification_preferences.dart';
+import 'package:productivity_app/features/settings/domain/entities/pomodoro_duration_settings.dart';
 import 'package:productivity_app/features/settings/domain/repositories/settings_repository.dart';
 import 'package:productivity_app/features/settings/domain/usecases/watch_notification_preferences_usecase.dart';
 
@@ -25,6 +26,12 @@ class _FakeSettingsRepository implements SettingsRepository {
   Stream<AppThemeMode> watchThemeMode() => Stream.value(AppThemeMode.system);
   @override
   Future<Result<void>> updateThemeMode(AppThemeMode mode) => throw UnimplementedError();
+  @override
+  Stream<PomodoroDurationSettings> watchPomodoroDurationSettings() =>
+      Stream.value(PomodoroDurationSettings.defaults);
+  @override
+  Future<Result<void>> updatePomodoroDurationSettings(PomodoroDurationSettings settings) =>
+      throw UnimplementedError();
 }
 
 class _FakeNotificationRepository implements NotificationRepository {

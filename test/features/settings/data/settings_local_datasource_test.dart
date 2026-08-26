@@ -30,6 +30,8 @@ void main() {
     bool habitRemindersEnabled = true,
     bool pomodoroNotificationsEnabled = true,
     String themeMode = 'system',
+    int pomodoroWorkDurationMinutes = 25,
+    int pomodoroBreakDurationMinutes = 5,
     SettingsSyncStatusLocal syncStatus = SettingsSyncStatusLocal.synced,
   }) {
     final now = DateTime(2026, 1, 1);
@@ -39,6 +41,8 @@ void main() {
       ..habitRemindersEnabled = habitRemindersEnabled
       ..pomodoroNotificationsEnabled = pomodoroNotificationsEnabled
       ..themeMode = themeMode
+      ..pomodoroWorkDurationMinutes = pomodoroWorkDurationMinutes
+      ..pomodoroBreakDurationMinutes = pomodoroBreakDurationMinutes
       ..syncStatus = syncStatus
       ..localUpdatedAt = now;
   }
@@ -79,11 +83,13 @@ void main() {
     await subscription.cancel();
   });
 
-  test('toFirestoreSettingsPatch bildirim alt alanlarını VE themeMode\'u içerir (dot-path)', () {
+  test('toFirestoreSettingsPatch bildirim alt alanlarını, themeMode\'u VE Pomodoro sürelerini içerir (dot-path)', () {
     final m = model(
       notificationsEnabled: false,
       pomodoroNotificationsEnabled: false,
       themeMode: 'amoled',
+      pomodoroWorkDurationMinutes: 45,
+      pomodoroBreakDurationMinutes: 15,
     );
     final patch = m.toFirestoreSettingsPatch();
 
@@ -93,10 +99,12 @@ void main() {
       'settings.habitRemindersEnabled': true,
       'settings.pomodoroNotificationsEnabled': false,
       'settings.themeMode': 'amoled',
+      'settings.pomodoroWorkDuration': 45,
+      'settings.pomodoroBreakDuration': 15,
     });
   });
 
-  test('fromFirestoreSettingsMap eksik alanlar için varsayılan true/system kullanır', () {
+  test('fromFirestoreSettingsMap eksik alanlar için varsayılan true/system/25/5 kullanır', () {
     final m = SettingsLocalModel.fromFirestoreSettingsMap({'notificationsEnabled': false});
 
     expect(m.notificationsEnabled, isFalse);
@@ -104,15 +112,18 @@ void main() {
     expect(m.habitRemindersEnabled, isTrue);
     expect(m.pomodoroNotificationsEnabled, isTrue);
     expect(m.themeMode, 'system');
+    expect(m.pomodoroWorkDurationMinutes, 25);
+    expect(m.pomodoroBreakDurationMinutes, 5);
     expect(m.syncStatus, SettingsSyncStatusLocal.synced);
   });
 
   test('copyWith yalnızca belirtilen alanları değiştirir, gerisini korur', () {
-    final original = model(themeMode: 'dark', notificationsEnabled: true);
+    final original = model(themeMode: 'dark', notificationsEnabled: true, pomodoroWorkDurationMinutes: 45);
     final updated = original.copyWith(notificationsEnabled: false);
 
     expect(updated.notificationsEnabled, isFalse);
     expect(updated.themeMode, 'dark');
+    expect(updated.pomodoroWorkDurationMinutes, 45);
     expect(updated.syncStatus, SettingsSyncStatusLocal.pendingUpdate);
   });
 }

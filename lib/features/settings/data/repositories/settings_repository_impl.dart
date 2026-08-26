@@ -7,6 +7,7 @@ import '../../../../core/network/connectivity_service.dart';
 import '../../../../core/sync/syncable_repository.dart';
 import '../../../../core/theme/app_theme_mode.dart';
 import '../../domain/entities/notification_preferences.dart';
+import '../../domain/entities/pomodoro_duration_settings.dart';
 import '../../domain/repositories/settings_repository.dart';
 import '../datasources/local/settings_local_datasource.dart';
 import '../datasources/remote/settings_remote_datasource.dart';
@@ -64,6 +65,24 @@ class SettingsRepositoryImpl implements SettingsRepository, SyncableRepository {
         await _trySyncSettings(updated);
       });
 
+  @override
+  Stream<PomodoroDurationSettings> watchPomodoroDurationSettings() {
+    return _local.watch().map(
+          (model) => model == null ? PomodoroDurationSettings.defaults : _pomodoroSettingsFromModel(model),
+        );
+  }
+
+  @override
+  Future<Result<void>> updatePomodoroDurationSettings(PomodoroDurationSettings settings) => _guard(() async {
+        final model = await _currentOrDefault();
+        final updated = model.copyWith(
+          pomodoroWorkDurationMinutes: settings.workMinutes,
+          pomodoroBreakDurationMinutes: settings.breakMinutes,
+        );
+        await _local.put(updated);
+        await _trySyncSettings(updated);
+      });
+
   /// Tek satırlık ayar kaydını, hiç yoksa (ör. ilk açılış — henüz ne
   /// bildirim ne tema tercihi kaydedilmiş) tam varsayılanlarla döner —
   /// `copyWith`'in üzerine güvenle inşa edebileceği bir taban sağlar.
@@ -84,6 +103,11 @@ class SettingsRepositoryImpl implements SettingsRepository, SyncableRepository {
       orElse: () => AppThemeMode.system,
     );
   }
+
+  PomodoroDurationSettings _pomodoroSettingsFromModel(SettingsLocalModel model) => PomodoroDurationSettings(
+        workMinutes: model.pomodoroWorkDurationMinutes,
+        breakMinutes: model.pomodoroBreakDurationMinutes,
+      );
 
   Future<void> _trySyncSettings(SettingsLocalModel model) async {
     if (!await _connectivity.isConnected) return;

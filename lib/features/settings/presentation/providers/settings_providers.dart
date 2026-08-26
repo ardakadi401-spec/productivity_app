@@ -10,10 +10,13 @@ import '../../data/datasources/local/settings_local_datasource.dart';
 import '../../data/datasources/remote/settings_remote_datasource.dart';
 import '../../data/repositories/settings_repository_impl.dart';
 import '../../domain/entities/notification_preferences.dart';
+import '../../domain/entities/pomodoro_duration_settings.dart';
 import '../../domain/repositories/settings_repository.dart';
 import '../../domain/usecases/update_notification_preferences_usecase.dart';
+import '../../domain/usecases/update_pomodoro_duration_settings_usecase.dart';
 import '../../domain/usecases/update_theme_mode_usecase.dart';
 import '../../domain/usecases/watch_notification_preferences_usecase.dart';
+import '../../domain/usecases/watch_pomodoro_duration_settings_usecase.dart';
 import '../../domain/usecases/watch_theme_mode_usecase.dart';
 
 // --- Service / Data katmanı — ARCHITECTURE.md §5.2 ---
@@ -52,11 +55,24 @@ final updateThemeModeUseCaseProvider = Provider<UpdateThemeModeUseCase>((ref) {
   return UpdateThemeModeUseCase(ref.watch(settingsRepositoryProvider));
 });
 
+final watchPomodoroDurationSettingsUseCaseProvider = Provider<WatchPomodoroDurationSettingsUseCase>((ref) {
+  return WatchPomodoroDurationSettingsUseCase(ref.watch(settingsRepositoryProvider));
+});
+
+final updatePomodoroDurationSettingsUseCaseProvider = Provider<UpdatePomodoroDurationSettingsUseCase>((ref) {
+  return UpdatePomodoroDurationSettingsUseCase(ref.watch(settingsRepositoryProvider));
+});
+
 // --- Presentation katmanı — reaktif okuma provider'ı ---
 
 /// Settings Screen'in "Bildirimler" bölümü.
 final notificationPreferencesProvider = StreamProvider.autoDispose<NotificationPreferences>((ref) {
   return ref.watch(watchNotificationPreferencesUseCaseProvider).call();
+});
+
+/// Settings Screen'in "Pomodoro" bölümü.
+final pomodoroDurationSettingsProvider = StreamProvider.autoDispose<PomodoroDurationSettings>((ref) {
+  return ref.watch(watchPomodoroDurationSettingsUseCaseProvider).call();
 });
 
 /// Uygulama ömrü boyunca canlı tutulması gereken (autoDispose OLMAYAN) tek

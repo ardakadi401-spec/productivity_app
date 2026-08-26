@@ -12,6 +12,7 @@ import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/theme_mode_provider.dart';
 import '../../../../routes/route_paths/route_paths.dart';
 import '../../../../shared/buttons/app_button_widget.dart';
+import '../../../../shared/components/app_chip.dart';
 import '../../../../shared/components/app_top_bar.dart';
 import '../../../../shared/components/sync_status_indicator_widget.dart';
 import '../../../../shared/dialogs/app_dialog.dart';
@@ -21,6 +22,7 @@ import '../../../authentication/presentation/providers/auth_providers.dart';
 import '../../../notification/presentation/providers/notification_providers.dart';
 import '../../domain/entities/lock_settings.dart';
 import '../../domain/entities/notification_preferences.dart';
+import '../../domain/entities/pomodoro_duration_settings.dart';
 import '../providers/lock_providers.dart';
 import '../providers/settings_providers.dart';
 
@@ -100,6 +102,9 @@ class SettingsPage extends ConsumerWidget {
                 const SizedBox(height: AppSpacing.lg),
                 _SectionLabel('Bildirimler'),
                 const _NotificationsSection(),
+                const SizedBox(height: AppSpacing.lg),
+                _SectionLabel('Pomodoro'),
+                const _PomodoroDurationSection(),
                 const SizedBox(height: AppSpacing.lg),
                 _SectionLabel('Senkronizasyon'),
                 Container(
@@ -284,6 +289,83 @@ class _NotificationsSection extends ConsumerWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// Yeni bir Pomodoro oturumu başlatıldığında kullanılacak varsayılan
+/// çalışma/mola sürelerini yapılandırır (DATABASE.md §2.3
+/// `pomodoroWorkDuration`/`pomodoroBreakDuration` — daha önce hiç UI'dan
+/// erişilebilir değildi, yalnızca kayıt sırasında Firestore'a yazılan ama
+/// hiç okunmayan "yetim" varsayılanlardı). Pomodoro Screen'deki
+/// `_DurationPresets` ile KARIŞTIRILMAMALI — o, yalnızca o anki oturum için
+/// geçici bir geçersiz kılmadır; buradaki değişiklik kalıcıdır ve yalnızca
+/// SONRAKİ yeni oturumları etkiler.
+class _PomodoroDurationSection extends ConsumerWidget {
+  const _PomodoroDurationSection();
+
+  static const _workPresets = [15, 25, 45, 60];
+  static const _breakPresets = [5, 10, 15];
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final tokens = theme.extension<AppColorsExtension>()!;
+    final settings =
+        ref.watch(pomodoroDurationSettingsProvider).valueOrNull ?? PomodoroDurationSettings.defaults;
+
+    Future<void> update(PomodoroDurationSettings updated) async {
+      final result = await ref.read(updatePomodoroDurationSettingsUseCaseProvider).call(updated);
+      if (!context.mounted) return;
+      if (result case Err(:final failure)) {
+        AppSnackbar.show(context, message: failure.message);
+      }
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: tokens.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Çalışma Süresi (dk)',
+            style: AppTypography.caption.copyWith(color: tokens.textSecondary),
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Wrap(
+            spacing: AppSpacing.sm,
+            children: [
+              for (final minutes in _workPresets)
+                AppChip(
+                  label: '$minutes',
+                  selected: settings.workMinutes == minutes,
+                  onTap: () => update(settings.copyWith(workMinutes: minutes)),
+                ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.md),
+          Text(
+            'Mola Süresi (dk)',
+            style: AppTypography.caption.copyWith(color: tokens.textSecondary),
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Wrap(
+            spacing: AppSpacing.sm,
+            children: [
+              for (final minutes in _breakPresets)
+                AppChip(
+                  label: '$minutes',
+                  selected: settings.breakMinutes == minutes,
+                  onTap: () => update(settings.copyWith(breakMinutes: minutes)),
+                ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }

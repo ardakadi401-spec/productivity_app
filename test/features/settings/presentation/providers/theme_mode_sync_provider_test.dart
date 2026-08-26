@@ -6,6 +6,7 @@ import 'package:productivity_app/core/errors/result.dart';
 import 'package:productivity_app/core/theme/app_theme_mode.dart';
 import 'package:productivity_app/core/theme/theme_mode_provider.dart';
 import 'package:productivity_app/features/settings/domain/entities/notification_preferences.dart';
+import 'package:productivity_app/features/settings/domain/entities/pomodoro_duration_settings.dart';
 import 'package:productivity_app/features/settings/domain/repositories/settings_repository.dart';
 import 'package:productivity_app/features/settings/presentation/providers/settings_providers.dart';
 
@@ -32,6 +33,14 @@ class _FakeSettingsRepository implements SettingsRepository {
 
   @override
   Future<Result<void>> updateNotificationPreferences(NotificationPreferences preferences) async =>
+      const Ok(null);
+
+  @override
+  Stream<PomodoroDurationSettings> watchPomodoroDurationSettings() =>
+      Stream.value(PomodoroDurationSettings.defaults);
+
+  @override
+  Future<Result<void>> updatePomodoroDurationSettings(PomodoroDurationSettings settings) async =>
       const Ok(null);
 }
 

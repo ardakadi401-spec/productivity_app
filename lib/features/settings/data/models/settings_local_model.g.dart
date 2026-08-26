@@ -38,24 +38,34 @@ const SettingsLocalModelSchema = CollectionSchema(
       name: r'notificationsEnabled',
       type: IsarType.bool,
     ),
-    r'pomodoroNotificationsEnabled': PropertySchema(
+    r'pomodoroBreakDurationMinutes': PropertySchema(
       id: 4,
+      name: r'pomodoroBreakDurationMinutes',
+      type: IsarType.long,
+    ),
+    r'pomodoroNotificationsEnabled': PropertySchema(
+      id: 5,
       name: r'pomodoroNotificationsEnabled',
       type: IsarType.bool,
     ),
+    r'pomodoroWorkDurationMinutes': PropertySchema(
+      id: 6,
+      name: r'pomodoroWorkDurationMinutes',
+      type: IsarType.long,
+    ),
     r'syncStatus': PropertySchema(
-      id: 5,
+      id: 7,
       name: r'syncStatus',
       type: IsarType.string,
       enumMap: _SettingsLocalModelsyncStatusEnumValueMap,
     ),
     r'taskRemindersEnabled': PropertySchema(
-      id: 6,
+      id: 8,
       name: r'taskRemindersEnabled',
       type: IsarType.bool,
     ),
     r'themeMode': PropertySchema(
-      id: 7,
+      id: 9,
       name: r'themeMode',
       type: IsarType.string,
     ),
@@ -97,10 +107,12 @@ void _settingsLocalModelSerialize(
   writer.writeDateTime(offsets[1], object.lastSyncedAt);
   writer.writeDateTime(offsets[2], object.localUpdatedAt);
   writer.writeBool(offsets[3], object.notificationsEnabled);
-  writer.writeBool(offsets[4], object.pomodoroNotificationsEnabled);
-  writer.writeString(offsets[5], object.syncStatus.name);
-  writer.writeBool(offsets[6], object.taskRemindersEnabled);
-  writer.writeString(offsets[7], object.themeMode);
+  writer.writeLong(offsets[4], object.pomodoroBreakDurationMinutes);
+  writer.writeBool(offsets[5], object.pomodoroNotificationsEnabled);
+  writer.writeLong(offsets[6], object.pomodoroWorkDurationMinutes);
+  writer.writeString(offsets[7], object.syncStatus.name);
+  writer.writeBool(offsets[8], object.taskRemindersEnabled);
+  writer.writeString(offsets[9], object.themeMode);
 }
 
 SettingsLocalModel _settingsLocalModelDeserialize(
@@ -115,14 +127,16 @@ SettingsLocalModel _settingsLocalModelDeserialize(
   object.lastSyncedAt = reader.readDateTimeOrNull(offsets[1]);
   object.localUpdatedAt = reader.readDateTime(offsets[2]);
   object.notificationsEnabled = reader.readBool(offsets[3]);
-  object.pomodoroNotificationsEnabled = reader.readBool(offsets[4]);
+  object.pomodoroBreakDurationMinutes = reader.readLong(offsets[4]);
+  object.pomodoroNotificationsEnabled = reader.readBool(offsets[5]);
+  object.pomodoroWorkDurationMinutes = reader.readLong(offsets[6]);
   object.syncStatus =
       _SettingsLocalModelsyncStatusValueEnumMap[reader.readStringOrNull(
-        offsets[5],
+        offsets[7],
       )] ??
       SettingsSyncStatusLocal.synced;
-  object.taskRemindersEnabled = reader.readBool(offsets[6]);
-  object.themeMode = reader.readString(offsets[7]);
+  object.taskRemindersEnabled = reader.readBool(offsets[8]);
+  object.themeMode = reader.readString(offsets[9]);
   return object;
 }
 
@@ -142,16 +156,20 @@ P _settingsLocalModelDeserializeProp<P>(
     case 3:
       return (reader.readBool(offset)) as P;
     case 4:
-      return (reader.readBool(offset)) as P;
+      return (reader.readLong(offset)) as P;
     case 5:
+      return (reader.readBool(offset)) as P;
+    case 6:
+      return (reader.readLong(offset)) as P;
+    case 7:
       return (_SettingsLocalModelsyncStatusValueEnumMap[reader.readStringOrNull(
                 offset,
               )] ??
               SettingsSyncStatusLocal.synced)
           as P;
-    case 6:
+    case 8:
       return (reader.readBool(offset)) as P;
-    case 7:
+    case 9:
       return (reader.readString(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -476,12 +494,128 @@ extension SettingsLocalModelQueryFilter
   }
 
   QueryBuilder<SettingsLocalModel, SettingsLocalModel, QAfterFilterCondition>
+  pomodoroBreakDurationMinutesEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'pomodoroBreakDurationMinutes',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SettingsLocalModel, SettingsLocalModel, QAfterFilterCondition>
+  pomodoroBreakDurationMinutesGreaterThan(int value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'pomodoroBreakDurationMinutes',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SettingsLocalModel, SettingsLocalModel, QAfterFilterCondition>
+  pomodoroBreakDurationMinutesLessThan(int value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'pomodoroBreakDurationMinutes',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SettingsLocalModel, SettingsLocalModel, QAfterFilterCondition>
+  pomodoroBreakDurationMinutesBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'pomodoroBreakDurationMinutes',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SettingsLocalModel, SettingsLocalModel, QAfterFilterCondition>
   pomodoroNotificationsEnabledEqualTo(bool value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         FilterCondition.equalTo(
           property: r'pomodoroNotificationsEnabled',
           value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SettingsLocalModel, SettingsLocalModel, QAfterFilterCondition>
+  pomodoroWorkDurationMinutesEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'pomodoroWorkDurationMinutes',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SettingsLocalModel, SettingsLocalModel, QAfterFilterCondition>
+  pomodoroWorkDurationMinutesGreaterThan(int value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'pomodoroWorkDurationMinutes',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SettingsLocalModel, SettingsLocalModel, QAfterFilterCondition>
+  pomodoroWorkDurationMinutesLessThan(int value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'pomodoroWorkDurationMinutes',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SettingsLocalModel, SettingsLocalModel, QAfterFilterCondition>
+  pomodoroWorkDurationMinutesBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'pomodoroWorkDurationMinutes',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
         ),
       );
     });
@@ -850,6 +984,20 @@ extension SettingsLocalModelQuerySortBy
   }
 
   QueryBuilder<SettingsLocalModel, SettingsLocalModel, QAfterSortBy>
+  sortByPomodoroBreakDurationMinutes() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'pomodoroBreakDurationMinutes', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SettingsLocalModel, SettingsLocalModel, QAfterSortBy>
+  sortByPomodoroBreakDurationMinutesDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'pomodoroBreakDurationMinutes', Sort.desc);
+    });
+  }
+
+  QueryBuilder<SettingsLocalModel, SettingsLocalModel, QAfterSortBy>
   sortByPomodoroNotificationsEnabled() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'pomodoroNotificationsEnabled', Sort.asc);
@@ -860,6 +1008,20 @@ extension SettingsLocalModelQuerySortBy
   sortByPomodoroNotificationsEnabledDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'pomodoroNotificationsEnabled', Sort.desc);
+    });
+  }
+
+  QueryBuilder<SettingsLocalModel, SettingsLocalModel, QAfterSortBy>
+  sortByPomodoroWorkDurationMinutes() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'pomodoroWorkDurationMinutes', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SettingsLocalModel, SettingsLocalModel, QAfterSortBy>
+  sortByPomodoroWorkDurationMinutesDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'pomodoroWorkDurationMinutes', Sort.desc);
     });
   }
 
@@ -979,6 +1141,20 @@ extension SettingsLocalModelQuerySortThenBy
   }
 
   QueryBuilder<SettingsLocalModel, SettingsLocalModel, QAfterSortBy>
+  thenByPomodoroBreakDurationMinutes() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'pomodoroBreakDurationMinutes', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SettingsLocalModel, SettingsLocalModel, QAfterSortBy>
+  thenByPomodoroBreakDurationMinutesDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'pomodoroBreakDurationMinutes', Sort.desc);
+    });
+  }
+
+  QueryBuilder<SettingsLocalModel, SettingsLocalModel, QAfterSortBy>
   thenByPomodoroNotificationsEnabled() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'pomodoroNotificationsEnabled', Sort.asc);
@@ -989,6 +1165,20 @@ extension SettingsLocalModelQuerySortThenBy
   thenByPomodoroNotificationsEnabledDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'pomodoroNotificationsEnabled', Sort.desc);
+    });
+  }
+
+  QueryBuilder<SettingsLocalModel, SettingsLocalModel, QAfterSortBy>
+  thenByPomodoroWorkDurationMinutes() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'pomodoroWorkDurationMinutes', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SettingsLocalModel, SettingsLocalModel, QAfterSortBy>
+  thenByPomodoroWorkDurationMinutesDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'pomodoroWorkDurationMinutes', Sort.desc);
     });
   }
 
@@ -1066,9 +1256,23 @@ extension SettingsLocalModelQueryWhereDistinct
   }
 
   QueryBuilder<SettingsLocalModel, SettingsLocalModel, QDistinct>
+  distinctByPomodoroBreakDurationMinutes() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'pomodoroBreakDurationMinutes');
+    });
+  }
+
+  QueryBuilder<SettingsLocalModel, SettingsLocalModel, QDistinct>
   distinctByPomodoroNotificationsEnabled() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'pomodoroNotificationsEnabled');
+    });
+  }
+
+  QueryBuilder<SettingsLocalModel, SettingsLocalModel, QDistinct>
+  distinctByPomodoroWorkDurationMinutes() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'pomodoroWorkDurationMinutes');
     });
   }
 
@@ -1130,10 +1334,24 @@ extension SettingsLocalModelQueryProperty
     });
   }
 
+  QueryBuilder<SettingsLocalModel, int, QQueryOperations>
+  pomodoroBreakDurationMinutesProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'pomodoroBreakDurationMinutes');
+    });
+  }
+
   QueryBuilder<SettingsLocalModel, bool, QQueryOperations>
   pomodoroNotificationsEnabledProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'pomodoroNotificationsEnabled');
+    });
+  }
+
+  QueryBuilder<SettingsLocalModel, int, QQueryOperations>
+  pomodoroWorkDurationMinutesProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'pomodoroWorkDurationMinutes');
     });
   }
 

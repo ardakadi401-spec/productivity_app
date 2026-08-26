@@ -10,6 +10,7 @@ import 'package:productivity_app/features/settings/data/models/settings_local_mo
 import 'package:productivity_app/features/settings/data/repositories/settings_repository_impl.dart';
 import 'package:productivity_app/core/theme/app_theme_mode.dart';
 import 'package:productivity_app/features/settings/domain/entities/notification_preferences.dart';
+import 'package:productivity_app/features/settings/domain/entities/pomodoro_duration_settings.dart';
 
 class _MockLocal extends Mock implements SettingsLocalDatasource {}
 
@@ -20,6 +21,8 @@ class _MockConnectivity extends Mock implements ConnectivityService {}
 SettingsLocalModel _model({
   bool notificationsEnabled = true,
   String themeMode = 'system',
+  int pomodoroWorkDurationMinutes = 25,
+  int pomodoroBreakDurationMinutes = 5,
   SettingsSyncStatusLocal syncStatus = SettingsSyncStatusLocal.synced,
 }) {
   final now = DateTime(2026, 1, 1);
@@ -29,6 +32,8 @@ SettingsLocalModel _model({
     ..habitRemindersEnabled = true
     ..pomodoroNotificationsEnabled = true
     ..themeMode = themeMode
+    ..pomodoroWorkDurationMinutes = pomodoroWorkDurationMinutes
+    ..pomodoroBreakDurationMinutes = pomodoroBreakDurationMinutes
     ..syncStatus = syncStatus
     ..localUpdatedAt = now;
 }
@@ -153,6 +158,45 @@ void main() {
       final captured = verify(() => local.put(captureAny())).captured.single as SettingsLocalModel;
       expect(captured.themeMode, 'dark');
       expect(captured.notificationsEnabled, isFalse);
+    });
+  });
+
+  group('watchPomodoroDurationSettings', () {
+    test('kayıt yoksa varsayılanları (25/5) döner', () async {
+      when(() => local.watch()).thenAnswer((_) => Stream.value(null));
+
+      final result = await repository.watchPomodoroDurationSettings().first;
+
+      expect(result.workMinutes, PomodoroDurationSettings.defaults.workMinutes);
+      expect(result.breakMinutes, PomodoroDurationSettings.defaults.breakMinutes);
+    });
+
+    test('yerel kaydı PomodoroDurationSettings\'e eşler', () async {
+      when(() => local.watch()).thenAnswer(
+        (_) => Stream.value(_model(pomodoroWorkDurationMinutes: 45, pomodoroBreakDurationMinutes: 15)),
+      );
+
+      final result = await repository.watchPomodoroDurationSettings().first;
+
+      expect(result.workMinutes, 45);
+      expect(result.breakMinutes, 15);
+    });
+  });
+
+  group('updatePomodoroDurationSettings', () {
+    test('mevcut temayı sıfırlamaz/kaybetmez, yalnızca süreleri değiştirir', () async {
+      when(() => local.get()).thenAnswer((_) async => _model(themeMode: 'amoled'));
+      when(() => local.put(any())).thenAnswer((_) async {});
+
+      final result = await repository.updatePomodoroDurationSettings(
+        const PomodoroDurationSettings(workMinutes: 45, breakMinutes: 15),
+      );
+
+      expect(result, isA<Ok<void>>());
+      final captured = verify(() => local.put(captureAny())).captured.single as SettingsLocalModel;
+      expect(captured.pomodoroWorkDurationMinutes, 45);
+      expect(captured.pomodoroBreakDurationMinutes, 15);
+      expect(captured.themeMode, 'amoled');
     });
   });
 

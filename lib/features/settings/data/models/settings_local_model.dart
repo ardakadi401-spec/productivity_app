@@ -24,6 +24,12 @@ class SettingsLocalModel {
   /// tutulur (Isar ilkel alan tercihi, diğer alanlarla tutarlı).
   late String themeMode;
 
+  /// Yeni bir Pomodoro oturumunun başlangıç süreleri (dakika) —
+  /// `PomodoroTimerController.build()` tarafından yalnızca controller ilk
+  /// oluşturulduğunda okunur (bkz. `PomodoroDurationSettings` doc notu).
+  late int pomodoroWorkDurationMinutes;
+  late int pomodoroBreakDurationMinutes;
+
   // --- Isar-only senkronizasyon meta alanları — DATABASE.md §12.2 ---
   @Enumerated(EnumType.name)
   late SettingsSyncStatusLocal syncStatus;
@@ -39,6 +45,8 @@ class SettingsLocalModel {
       'settings.habitRemindersEnabled': habitRemindersEnabled,
       'settings.pomodoroNotificationsEnabled': pomodoroNotificationsEnabled,
       'settings.themeMode': themeMode,
+      'settings.pomodoroWorkDuration': pomodoroWorkDurationMinutes,
+      'settings.pomodoroBreakDuration': pomodoroBreakDurationMinutes,
     };
   }
 
@@ -51,6 +59,8 @@ class SettingsLocalModel {
       ..habitRemindersEnabled = settings['habitRemindersEnabled'] as bool? ?? true
       ..pomodoroNotificationsEnabled = settings['pomodoroNotificationsEnabled'] as bool? ?? true
       ..themeMode = settings['themeMode'] as String? ?? 'system'
+      ..pomodoroWorkDurationMinutes = settings['pomodoroWorkDuration'] as int? ?? 25
+      ..pomodoroBreakDurationMinutes = settings['pomodoroBreakDuration'] as int? ?? 5
       ..syncStatus = SettingsSyncStatusLocal.synced
       ..lastSyncedAt = now
       ..localUpdatedAt = now;
@@ -65,6 +75,8 @@ class SettingsLocalModel {
     bool? habitRemindersEnabled,
     bool? pomodoroNotificationsEnabled,
     String? themeMode,
+    int? pomodoroWorkDurationMinutes,
+    int? pomodoroBreakDurationMinutes,
   }) {
     return SettingsLocalModel()
       ..id = 0
@@ -73,6 +85,8 @@ class SettingsLocalModel {
       ..habitRemindersEnabled = habitRemindersEnabled ?? this.habitRemindersEnabled
       ..pomodoroNotificationsEnabled = pomodoroNotificationsEnabled ?? this.pomodoroNotificationsEnabled
       ..themeMode = themeMode ?? this.themeMode
+      ..pomodoroWorkDurationMinutes = pomodoroWorkDurationMinutes ?? this.pomodoroWorkDurationMinutes
+      ..pomodoroBreakDurationMinutes = pomodoroBreakDurationMinutes ?? this.pomodoroBreakDurationMinutes
       ..syncStatus = SettingsSyncStatusLocal.pendingUpdate
       ..localUpdatedAt = DateTime.now();
   }

@@ -33,7 +33,43 @@ class PomodoroTimerController extends Notifier<PomodoroTimerState> {
   @override
   PomodoroTimerState build() {
     ref.onDispose(() => _ticker?.cancel());
-    return PomodoroTimerState.initial();
+    final initial = PomodoroTimerState.initial();
+    unawaited(_hydrateDurationsFromSettings(initial));
+    return initial;
+  }
+
+  /// Kalıcı Pomodoro varsayılan sürelerini (Settings Screen'de
+  /// yapılandırılabilir) okuyup `initial()`'ın sabit 25/5 varsayılanının
+  /// üzerine uygular. `build()` senkron dönmek ZORUNDA olduğundan bu
+  /// asenkron hydration, `themeModeSyncProvider`'ın `themeModeProvider`'ı
+  /// hydrate etme deseniyle aynı ilkeyi izler — yalnızca BİR KEZ, controller
+  /// ilk oluşturulduğunda çalışır (Settings'teki sonraki değişiklikler yalnızca
+  /// bir sonraki uygulama oturumunu etkiler).
+  ///
+  /// Çift koruma: (1) `isIdle` değilse (hydrate tamamlanmadan oturum zaten
+  /// başladıysa) DOKUNULMAZ — aksi halde çalışan bir zamanlayıcının kalan
+  /// süresini ortasında bozardı. (2) süreler `initial`'dan (senkron dönülen
+  /// tam o anlık nesne) farklıysa (kullanıcı/test hydrate tamamlanmadan
+  /// `setWorkDuration`/`setBreakDuration` çağırdıysa — `_DurationPresets`'in
+  /// oturum-içi geçici geçersiz kılması) yine DOKUNULMAZ — kullanıcının
+  /// açıkça yaptığı bir seçim, gecikmiş bir kalıcı okuma tarafından ezilmez.
+  Future<void> _hydrateDurationsFromSettings(PomodoroTimerState initial) async {
+    try {
+      final settings = await ref.read(watchPomodoroDurationSettingsUseCaseProvider).call().first;
+      if (!state.isIdle) return;
+      if (state.workDuration != initial.workDuration || state.breakDuration != initial.breakDuration) {
+        return;
+      }
+      final workDuration = Duration(minutes: settings.workMinutes);
+      final breakDuration = Duration(minutes: settings.breakMinutes);
+      state = state.copyWith(
+        workDuration: workDuration,
+        breakDuration: breakDuration,
+        remaining: state.phase == PomodoroPhase.work ? workDuration : breakDuration,
+      );
+    } catch (_) {
+      // Sessiz — okunamazsa sabit 25/5 varsayılanı korunur.
+    }
   }
 
   DateTime _now() => ref.read(pomodoroClockProvider)();
