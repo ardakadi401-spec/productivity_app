@@ -26,6 +26,8 @@ import '../../features/tasks/domain/entities/task.dart';
 import '../../features/tasks/presentation/pages/create_task_page.dart';
 import '../../features/tasks/presentation/pages/edit_task_page.dart';
 import '../../features/tasks/presentation/pages/task_detail_page.dart';
+import '../../features/vault/presentation/pages/vault_item_detail_page.dart';
+import '../../features/vault/presentation/pages/vault_list_page.dart';
 import '../guards/auth_guard.dart';
 import '../guards/lock_guard.dart';
 import '../route_paths/route_paths.dart';
@@ -176,6 +178,16 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: RoutePaths.noteDetail,
         builder: (context, state) => NoteDetailPage(noteId: state.pathParameters['noteId']!),
+      ),
+      GoRoute(path: RoutePaths.vault, builder: (context, state) => const VaultListPage()),
+      GoRoute(
+        path: RoutePaths.createVaultItem,
+        builder: (context, state) => const VaultItemDetailPage(),
+      ),
+      GoRoute(
+        path: RoutePaths.vaultItemDetail,
+        builder: (context, state) =>
+            VaultItemDetailPage(itemId: state.pathParameters['itemId']!),
       ),
       GoRoute(path: RoutePaths.statistics, builder: (context, state) => const StatisticsPage()),
       GoRoute(path: RoutePaths.search, builder: (context, state) => const SearchPage()),

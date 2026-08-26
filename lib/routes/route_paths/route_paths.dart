@@ -35,6 +35,12 @@ class RoutePaths {
   static const String settings = '/settings';
   static const String profile = '/profile';
 
+  // Şifre Kasası — 23 resmi ekranın dışında, kullanıcı isteğiyle sonradan
+  // eklendi (bkz. `features/vault/`).
+  static const String vault = '/vault';
+  static const String createVaultItem = '/vault/new';
+  static const String vaultItemDetail = '/vault/:itemId';
+
   // Shell dışı bağımsız rota — ARCHITECTURE.md Bölüm 9.3.
   static const String lock = '/lock';
 }

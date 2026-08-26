@@ -121,6 +121,23 @@ class SettingsPage extends ConsumerWidget {
                 const SizedBox(height: AppSpacing.lg),
                 _SectionLabel('Güvenlik'),
                 const _SecuritySection(),
+                const SizedBox(height: AppSpacing.lg),
+                _SectionLabel('Şifre Kasası'),
+                Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: tokens.border),
+                  ),
+                  clipBehavior: Clip.antiAlias,
+                  child: Material(
+                    color: theme.colorScheme.surface,
+                    child: _SettingsTile(
+                      icon: Icons.lock_outline,
+                      label: 'Şifrelerim ve Notlarım',
+                      onTap: () => context.push(RoutePaths.vault),
+                    ),
+                  ),
+                ),
               ],
             ),
           ),

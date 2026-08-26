@@ -12,6 +12,7 @@ import '../../features/statistics/data/models/statistics_snapshot_local_model.da
 import '../../features/tags/data/models/tag_local_model.dart';
 import '../../features/tasks/data/models/sub_task_local_model.dart';
 import '../../features/tasks/data/models/task_local_model.dart';
+import '../../features/vault/data/models/vault_item_local_model.dart';
 
 /// ARCHITECTURE.md Bölüm 6.2 "Service" katmanı — ham Isar SDK'sını sarmalar.
 /// FOLDER_STRUCTURE.md'nin `core/storage/` için öngördüğü "tek paylaşılan
@@ -40,6 +41,7 @@ class IsarService {
         PomodoroSessionLocalModelSchema,
         StatisticsSnapshotLocalModelSchema,
         SettingsLocalModelSchema,
+        VaultItemLocalModelSchema,
       ],
       directory: dir.path,
     );

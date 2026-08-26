@@ -11,6 +11,7 @@ import '../features/settings/presentation/providers/settings_providers.dart';
 import '../features/statistics/presentation/providers/statistics_providers.dart';
 import '../features/tags/presentation/providers/tag_providers.dart';
 import '../features/tasks/presentation/providers/task_providers.dart';
+import '../features/vault/presentation/providers/vault_providers.dart';
 
 /// FAZ 14 — merkezi `SyncCoordinator`'ın (`core/sync/`) gerçekte hangi
 /// repository'leri senkronize edeceğinin bağlantı noktası.
@@ -40,6 +41,7 @@ final List<Override> syncBootstrapOverrides = [
       ref.watch(tagRepositoryProvider) as SyncableRepository,
       ref.watch(statisticsSnapshotRepositoryProvider) as SyncableRepository,
       ref.watch(settingsRepositoryProvider) as SyncableRepository,
+      ref.watch(vaultRepositoryProvider) as SyncableRepository,
     ],
   ),
 ];

@@ -105,6 +105,7 @@ class AuthRemoteDatasource {
     'pomodoroSessions': null,
     'statisticsSnapshots': null,
     'tags': null,
+    'vaultItems': null,
   };
 
   /// Bir kullanıcının hesabını sildiğinde Firestore'da yalnızca `users/{uid}`
