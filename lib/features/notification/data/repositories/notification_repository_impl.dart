@@ -10,9 +10,14 @@ import '../../domain/repositories/notification_repository.dart';
 
 /// `flutter_local_notifications` + `timezone` sarmalayıcısı — ARCHITECTURE.md
 /// §6.2 "Service" katmanı prensibiyle aynı ilke (ham SDK'yı Domain
-/// sözleşmesinin arkasına gizler). Yalnızca Android için etkin başlatılır
-/// (kullanıcı kararı: bu fazda iOS'a özel geliştirme yapılmaz — Darwin
-/// başlatma ayarları bilinçli olarak verilmez).
+/// sözleşmesinin arkasına gizler). Android VE iOS için etkin başlatılır.
+/// iOS'ta izin, Android'deki gibi `initialize()` sırasında OTOMATİK
+/// istenmez (`DarwinInitializationSettings.requestXPermission: false`) —
+/// kullanıcı Ayarlar'da "Bildirimleri Etkinleştir"i açtığında
+/// `requestPermission()` üzerinden, Android'le birebir aynı akışla istenir
+/// (canlı iOS cihaz testinde bulunan gerçek hata: `iOS:` ayarı hiç
+/// verilmediğinden iOS hiçbir zaman izin istemiyordu — Ayarlar
+/// uygulamasında "Bildirimler" bölümü bile hiç oluşmuyordu).
 class NotificationRepositoryImpl implements NotificationRepository {
   NotificationRepositoryImpl(this._plugin);
 
@@ -43,7 +48,16 @@ class NotificationRepositoryImpl implements NotificationRepository {
     }
 
     const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
-    const initSettings = InitializationSettings(android: androidSettings);
+    // Android'deki `requestPermission()` ile aynı "kullanıcı Ayarlar'dan
+    // açana kadar istenmez" davranışını eşlemek için üçü de false —
+    // varsayılan (true) ile `initialize()` iOS'ta izin dialogunu hemen,
+    // kullanıcı hiçbir şeye dokunmadan açılışta gösterirdi.
+    const iosSettings = DarwinInitializationSettings(
+      requestAlertPermission: false,
+      requestBadgePermission: false,
+      requestSoundPermission: false,
+    );
+    const initSettings = InitializationSettings(android: androidSettings, iOS: iosSettings);
 
     await _plugin.initialize(
       settings: initSettings,
@@ -68,30 +82,56 @@ class NotificationRepositoryImpl implements NotificationRepository {
   Future<bool> requestPermission() async {
     final android =
         _plugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
-    if (android == null) return false;
-    try {
-      final granted = await android.requestNotificationsPermission();
-      // Android 12+ tam zamanlı alarm izni ayrıca istenir — reddedilirse
-      // `zonedSchedule` yine de `inexact` moda düşerek çalışmaya devam eder
-      // (aşağıda `scheduleNotification`), bu yüzden sonucu genel izin
-      // durumunu belirlemez.
-      await android.requestExactAlarmsPermission();
-      return granted ?? false;
-    } catch (_) {
-      return false;
+    if (android != null) {
+      try {
+        final granted = await android.requestNotificationsPermission();
+        // Android 12+ tam zamanlı alarm izni ayrıca istenir — reddedilirse
+        // `zonedSchedule` yine de `inexact` moda düşerek çalışmaya devam
+        // eder (aşağıda `scheduleNotification`), bu yüzden sonucu genel
+        // izin durumunu belirlemez.
+        await android.requestExactAlarmsPermission();
+        return granted ?? false;
+      } catch (_) {
+        return false;
+      }
     }
+
+    final ios = _plugin.resolvePlatformSpecificImplementation<IOSFlutterLocalNotificationsPlugin>();
+    if (ios != null) {
+      try {
+        final granted = await ios.requestPermissions(alert: true, badge: true, sound: true);
+        return granted ?? false;
+      } catch (_) {
+        return false;
+      }
+    }
+
+    return false;
   }
 
   @override
   Future<bool> areNotificationsEnabled() async {
     final android =
         _plugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
-    if (android == null) return false;
-    try {
-      return await android.areNotificationsEnabled() ?? false;
-    } catch (_) {
-      return false;
+    if (android != null) {
+      try {
+        return await android.areNotificationsEnabled() ?? false;
+      } catch (_) {
+        return false;
+      }
     }
+
+    final ios = _plugin.resolvePlatformSpecificImplementation<IOSFlutterLocalNotificationsPlugin>();
+    if (ios != null) {
+      try {
+        final options = await ios.checkPermissions();
+        return options?.isEnabled ?? false;
+      } catch (_) {
+        return false;
+      }
+    }
+
+    return false;
   }
 
   @override
@@ -104,6 +144,7 @@ class NotificationRepositoryImpl implements NotificationRepository {
         importance: Importance.high,
         priority: Priority.high,
       ),
+      iOS: const DarwinNotificationDetails(),
     );
 
     final scheduledTz = tz.TZDateTime.from(request.scheduledDate, tz.local);
