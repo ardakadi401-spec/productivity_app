@@ -10,6 +10,7 @@ import 'package:productivity_app/features/settings/domain/usecases/watch_notific
 import 'package:productivity_app/features/tasks/domain/entities/task.dart';
 import 'package:productivity_app/features/tasks/domain/usecases/sync_task_reminder_usecase.dart';
 import 'package:productivity_app/core/errors/result.dart';
+import 'package:productivity_app/core/theme/app_theme_mode.dart';
 
 class _FakeSettingsRepository implements SettingsRepository {
   NotificationPreferences preferences = NotificationPreferences.defaults;
@@ -20,6 +21,10 @@ class _FakeSettingsRepository implements SettingsRepository {
   @override
   Future<Result<void>> updateNotificationPreferences(NotificationPreferences preferences) =>
       throw UnimplementedError();
+  @override
+  Stream<AppThemeMode> watchThemeMode() => Stream.value(AppThemeMode.system);
+  @override
+  Future<Result<void>> updateThemeMode(AppThemeMode mode) => throw UnimplementedError();
 }
 
 class _FakeNotificationRepository implements NotificationRepository {

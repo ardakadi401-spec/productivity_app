@@ -8,6 +8,7 @@ import 'package:productivity_app/features/settings/data/datasources/local/settin
 import 'package:productivity_app/features/settings/data/datasources/remote/settings_remote_datasource.dart';
 import 'package:productivity_app/features/settings/data/models/settings_local_model.dart';
 import 'package:productivity_app/features/settings/data/repositories/settings_repository_impl.dart';
+import 'package:productivity_app/core/theme/app_theme_mode.dart';
 import 'package:productivity_app/features/settings/domain/entities/notification_preferences.dart';
 
 class _MockLocal extends Mock implements SettingsLocalDatasource {}
@@ -18,6 +19,7 @@ class _MockConnectivity extends Mock implements ConnectivityService {}
 
 SettingsLocalModel _model({
   bool notificationsEnabled = true,
+  String themeMode = 'system',
   SettingsSyncStatusLocal syncStatus = SettingsSyncStatusLocal.synced,
 }) {
   final now = DateTime(2026, 1, 1);
@@ -26,6 +28,7 @@ SettingsLocalModel _model({
     ..taskRemindersEnabled = true
     ..habitRemindersEnabled = true
     ..pomodoroNotificationsEnabled = true
+    ..themeMode = themeMode
     ..syncStatus = syncStatus
     ..localUpdatedAt = now;
 }
@@ -108,6 +111,48 @@ void main() {
 
       expect(result, isA<Err<void>>());
       expect((result as Err).failure, isA<CacheFailure>());
+    });
+
+    test('mevcut themeMode\'u sıfırlamaz/kaybetmez (read-modify-write regresyonu)', () async {
+      when(() => local.get()).thenAnswer((_) async => _model(themeMode: 'amoled'));
+      when(() => local.put(any())).thenAnswer((_) async {});
+
+      await repository.updateNotificationPreferences(NotificationPreferences.defaults);
+
+      final captured = verify(() => local.put(captureAny())).captured.single as SettingsLocalModel;
+      expect(captured.themeMode, 'amoled');
+    });
+  });
+
+  group('watchThemeMode', () {
+    test('kayıt yoksa system döner', () async {
+      when(() => local.watch()).thenAnswer((_) => Stream.value(null));
+
+      final result = await repository.watchThemeMode().first;
+
+      expect(result, AppThemeMode.system);
+    });
+
+    test('yerel kaydı AppThemeMode\'a eşler', () async {
+      when(() => local.watch()).thenAnswer((_) => Stream.value(_model(themeMode: 'amoled')));
+
+      final result = await repository.watchThemeMode().first;
+
+      expect(result, AppThemeMode.amoled);
+    });
+  });
+
+  group('updateThemeMode', () {
+    test('mevcut bildirim tercihlerini sıfırlamaz/kaybetmez, yalnızca themeMode\'u değiştirir', () async {
+      when(() => local.get()).thenAnswer((_) async => _model(notificationsEnabled: false));
+      when(() => local.put(any())).thenAnswer((_) async {});
+
+      final result = await repository.updateThemeMode(AppThemeMode.dark);
+
+      expect(result, isA<Ok<void>>());
+      final captured = verify(() => local.put(captureAny())).captured.single as SettingsLocalModel;
+      expect(captured.themeMode, 'dark');
+      expect(captured.notificationsEnabled, isFalse);
     });
   });
 

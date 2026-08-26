@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import '../../../../core/errors/failure.dart';
 import '../../../../core/errors/result.dart';
 import '../../../../core/exceptions/app_exceptions.dart';
 import '../../../../core/network/connectivity_service.dart';
 import '../../../../core/sync/syncable_repository.dart';
+import '../../../../core/theme/app_theme_mode.dart';
 import '../../domain/entities/notification_preferences.dart';
 import '../../domain/repositories/settings_repository.dart';
 import '../datasources/local/settings_local_datasource.dart';
@@ -37,16 +40,36 @@ class SettingsRepositoryImpl implements SettingsRepository, SyncableRepository {
 
   @override
   Future<Result<void>> updateNotificationPreferences(NotificationPreferences preferences) => _guard(() async {
-        final model = SettingsLocalModel()
-          ..notificationsEnabled = preferences.notificationsEnabled
-          ..taskRemindersEnabled = preferences.taskRemindersEnabled
-          ..habitRemindersEnabled = preferences.habitRemindersEnabled
-          ..pomodoroNotificationsEnabled = preferences.pomodoroNotificationsEnabled
-          ..syncStatus = SettingsSyncStatusLocal.pendingUpdate
-          ..localUpdatedAt = DateTime.now();
-        await _local.put(model);
-        await _trySyncSettings(model);
+        final model = await _currentOrDefault();
+        final updated = model.copyWith(
+          notificationsEnabled: preferences.notificationsEnabled,
+          taskRemindersEnabled: preferences.taskRemindersEnabled,
+          habitRemindersEnabled: preferences.habitRemindersEnabled,
+          pomodoroNotificationsEnabled: preferences.pomodoroNotificationsEnabled,
+        );
+        await _local.put(updated);
+        await _trySyncSettings(updated);
       });
+
+  @override
+  Stream<AppThemeMode> watchThemeMode() {
+    return _local.watch().map((model) => model == null ? AppThemeMode.system : _themeModeFromModel(model));
+  }
+
+  @override
+  Future<Result<void>> updateThemeMode(AppThemeMode mode) => _guard(() async {
+        final model = await _currentOrDefault();
+        final updated = model.copyWith(themeMode: mode.name);
+        await _local.put(updated);
+        await _trySyncSettings(updated);
+      });
+
+  /// Tek satırlık ayar kaydını, hiç yoksa (ör. ilk açılış — henüz ne
+  /// bildirim ne tema tercihi kaydedilmiş) tam varsayılanlarla döner —
+  /// `copyWith`'in üzerine güvenle inşa edebileceği bir taban sağlar.
+  Future<SettingsLocalModel> _currentOrDefault() async {
+    return await _local.get() ?? SettingsLocalModel.fromFirestoreSettingsMap(const {});
+  }
 
   NotificationPreferences _toEntity(SettingsLocalModel model) => NotificationPreferences(
         notificationsEnabled: model.notificationsEnabled,
@@ -54,6 +77,13 @@ class SettingsRepositoryImpl implements SettingsRepository, SyncableRepository {
         habitRemindersEnabled: model.habitRemindersEnabled,
         pomodoroNotificationsEnabled: model.pomodoroNotificationsEnabled,
       );
+
+  AppThemeMode _themeModeFromModel(SettingsLocalModel model) {
+    return AppThemeMode.values.firstWhere(
+      (m) => m.name == model.themeMode,
+      orElse: () => AppThemeMode.system,
+    );
+  }
 
   Future<void> _trySyncSettings(SettingsLocalModel model) async {
     if (!await _connectivity.isConnected) return;
@@ -119,5 +149,3 @@ class SettingsRepositoryImpl implements SettingsRepository, SyncableRepository {
     };
   }
 }
-
-void unawaited(Future<void> future) {}

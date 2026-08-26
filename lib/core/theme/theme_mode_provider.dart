@@ -3,17 +3,19 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'app_theme_mode.dart';
 
 /// Gerçek, çalışan tema tercihi durumu — ROADMAP.md FAZ 4: "tema seçimi bu
-/// fazda gerçek işlevle bağlanır". Şu an yalnızca oturum içi (in-memory)
-/// tutulur; DATABASE.md `users/{uid}.settings.themeMode` alanına kalıcı
-/// yazma, Settings feature'ının kendi Repository/UseCase katmanıyla
-/// FAZ 16'da eklenecektir (bkz. ROADMAP.md FAZ 16). `autoDispose`
-/// kullanılmaz — ARCHITECTURE.md Bölüm 5.3: uygulama genelinde kalıcı
-/// olması gereken durumlar kök seviyede tutulur.
+/// fazda gerçek işlevle bağlanır". Bu provider yalnızca oturum-içi
+/// (in-memory) state'i tutar; DATABASE.md `users/{uid}.settings.themeMode`
+/// alanına kalıcı okuma/yazma, `features/settings/presentation/providers/
+/// settings_providers.dart`'taki `themeModeSyncProvider` tarafından
+/// (Settings feature'ının Repository/UseCase katmanı üzerinden) dışarıdan
+/// kurulur. `autoDispose` kullanılmaz — ARCHITECTURE.md Bölüm 5.3:
+/// uygulama genelinde kalıcı olması gereken durumlar kök seviyede tutulur.
 ///
-/// Henüz ayrı bir `settings` feature'ı olmadığından bu provider bilinçli
-/// olarak `core/theme/` altında kalıyor; FAZ 16'da o feature kurulduğunda
-/// `features/settings/presentation/providers/`e taşınması ARCHITECTURE.md
-/// Bölüm 13'teki konumlandırma kuralına göre doğru adım olacaktır.
+/// Bu provider'ın kendisi bilinçli olarak `core/theme/` altında kalır (Core,
+/// birden çok feature'ın okuduğu cross-cutting UI durumunu barındırabilir)
+/// — kalıcılık bağlantısını KURAN taraf Settings'tir, çünkü Core'un
+/// Feature'lara bağımlı olmaması gerekir (ARCHITECTURE.md Bölüm 15),
+/// tersi değil.
 class ThemeModeController extends Notifier<AppThemeMode> {
   @override
   AppThemeMode build() => AppThemeMode.system;

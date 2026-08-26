@@ -54,6 +54,11 @@ const SettingsLocalModelSchema = CollectionSchema(
       name: r'taskRemindersEnabled',
       type: IsarType.bool,
     ),
+    r'themeMode': PropertySchema(
+      id: 7,
+      name: r'themeMode',
+      type: IsarType.string,
+    ),
   },
 
   estimateSize: _settingsLocalModelEstimateSize,
@@ -78,6 +83,7 @@ int _settingsLocalModelEstimateSize(
 ) {
   var bytesCount = offsets.last;
   bytesCount += 3 + object.syncStatus.name.length * 3;
+  bytesCount += 3 + object.themeMode.length * 3;
   return bytesCount;
 }
 
@@ -94,6 +100,7 @@ void _settingsLocalModelSerialize(
   writer.writeBool(offsets[4], object.pomodoroNotificationsEnabled);
   writer.writeString(offsets[5], object.syncStatus.name);
   writer.writeBool(offsets[6], object.taskRemindersEnabled);
+  writer.writeString(offsets[7], object.themeMode);
 }
 
 SettingsLocalModel _settingsLocalModelDeserialize(
@@ -115,6 +122,7 @@ SettingsLocalModel _settingsLocalModelDeserialize(
       )] ??
       SettingsSyncStatusLocal.synced;
   object.taskRemindersEnabled = reader.readBool(offsets[6]);
+  object.themeMode = reader.readString(offsets[7]);
   return object;
 }
 
@@ -143,6 +151,8 @@ P _settingsLocalModelDeserializeProp<P>(
           as P;
     case 6:
       return (reader.readBool(offset)) as P;
+    case 7:
+      return (reader.readString(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
   }
@@ -632,6 +642,147 @@ extension SettingsLocalModelQueryFilter
       );
     });
   }
+
+  QueryBuilder<SettingsLocalModel, SettingsLocalModel, QAfterFilterCondition>
+  themeModeEqualTo(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'themeMode',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SettingsLocalModel, SettingsLocalModel, QAfterFilterCondition>
+  themeModeGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'themeMode',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SettingsLocalModel, SettingsLocalModel, QAfterFilterCondition>
+  themeModeLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'themeMode',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SettingsLocalModel, SettingsLocalModel, QAfterFilterCondition>
+  themeModeBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'themeMode',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SettingsLocalModel, SettingsLocalModel, QAfterFilterCondition>
+  themeModeStartsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'themeMode',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SettingsLocalModel, SettingsLocalModel, QAfterFilterCondition>
+  themeModeEndsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'themeMode',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SettingsLocalModel, SettingsLocalModel, QAfterFilterCondition>
+  themeModeContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'themeMode',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SettingsLocalModel, SettingsLocalModel, QAfterFilterCondition>
+  themeModeMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'themeMode',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SettingsLocalModel, SettingsLocalModel, QAfterFilterCondition>
+  themeModeIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'themeMode', value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<SettingsLocalModel, SettingsLocalModel, QAfterFilterCondition>
+  themeModeIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(property: r'themeMode', value: ''),
+      );
+    });
+  }
 }
 
 extension SettingsLocalModelQueryObject
@@ -737,6 +888,20 @@ extension SettingsLocalModelQuerySortBy
   sortByTaskRemindersEnabledDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'taskRemindersEnabled', Sort.desc);
+    });
+  }
+
+  QueryBuilder<SettingsLocalModel, SettingsLocalModel, QAfterSortBy>
+  sortByThemeMode() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'themeMode', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SettingsLocalModel, SettingsLocalModel, QAfterSortBy>
+  sortByThemeModeDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'themeMode', Sort.desc);
     });
   }
 }
@@ -854,6 +1019,20 @@ extension SettingsLocalModelQuerySortThenBy
       return query.addSortBy(r'taskRemindersEnabled', Sort.desc);
     });
   }
+
+  QueryBuilder<SettingsLocalModel, SettingsLocalModel, QAfterSortBy>
+  thenByThemeMode() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'themeMode', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SettingsLocalModel, SettingsLocalModel, QAfterSortBy>
+  thenByThemeModeDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'themeMode', Sort.desc);
+    });
+  }
 }
 
 extension SettingsLocalModelQueryWhereDistinct
@@ -904,6 +1083,13 @@ extension SettingsLocalModelQueryWhereDistinct
   distinctByTaskRemindersEnabled() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'taskRemindersEnabled');
+    });
+  }
+
+  QueryBuilder<SettingsLocalModel, SettingsLocalModel, QDistinct>
+  distinctByThemeMode({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'themeMode', caseSensitive: caseSensitive);
     });
   }
 }
@@ -962,6 +1148,13 @@ extension SettingsLocalModelQueryProperty
   taskRemindersEnabledProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'taskRemindersEnabled');
+    });
+  }
+
+  QueryBuilder<SettingsLocalModel, String, QQueryOperations>
+  themeModeProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'themeMode');
     });
   }
 }

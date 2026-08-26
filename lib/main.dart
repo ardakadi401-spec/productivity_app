@@ -11,6 +11,7 @@ import 'config/firebase_config/firebase_options.dart';
 import 'core/storage/isar_provider.dart';
 import 'core/sync/sync_coordinator.dart';
 import 'features/notification/presentation/providers/notification_providers.dart';
+import 'features/settings/presentation/providers/settings_providers.dart';
 import 'services/database_service/isar_service.dart';
 
 /// Uygulama giriş noktası — FOLDER_STRUCTURE.md Bölüm 1'e göre minimal
@@ -51,6 +52,11 @@ Future<void> main() async {
   // sync_coordinator.dart) uygulama ömrü boyunca aktive eder; okunmazsa
   // provider hiç oluşturulmaz ve coordinator asla dinlemeye başlamaz.
   container.read(syncCoordinatorProvider);
+
+  // Kalıcı tema tercihini (`themeMode`) oturum-içi `themeModeProvider`'a
+  // hydrate eden ve sonraki değişiklikleri geri kalıcılığa yazan köprüyü
+  // aynı desenle erkenden aktive eder — okunmazsa hiç kurulmaz.
+  container.read(themeModeSyncProvider);
 
   runApp(
     UncontrolledProviderScope(

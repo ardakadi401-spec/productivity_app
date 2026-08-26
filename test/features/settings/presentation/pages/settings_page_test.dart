@@ -52,6 +52,17 @@ class _FakeSettingsRepository implements SettingsRepository {
     _controller.add(preferences);
     return const Ok(null);
   }
+
+  final List<AppThemeMode> themeModeUpdateCalls = [];
+
+  @override
+  Stream<AppThemeMode> watchThemeMode() => const Stream.empty();
+
+  @override
+  Future<Result<void>> updateThemeMode(AppThemeMode mode) async {
+    themeModeUpdateCalls.add(mode);
+    return const Ok(null);
+  }
 }
 
 class _FakeNotificationRepository implements NotificationRepository {

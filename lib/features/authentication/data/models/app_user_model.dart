@@ -24,7 +24,13 @@ class AppUserModel {
   final Map<String, dynamic> settings;
   final bool onboardingCompleted;
 
-  /// Yeni kullanıcı için DATABASE.md Bölüm 2.3 varsayılan `settings` değerleri.
+  /// Yeni kullanıcı için DATABASE.md Bölüm 2.3 varsayılan `settings`
+  /// değerleri. `appLockEnabled`/`appLockType` bilerek BURADA YOKTUR —
+  /// DATABASE.md bunları şemada öngörse de, kilit durumu Privacy
+  /// Policy'nin taahhüdü gereği (bkz. `LockRepositoryImpl` doc notu) hiçbir
+  /// zaman Firestore'a senkronize edilmez; bu iki alanı varsayılan haritaya
+  /// koymak, hiç güncellenmeyen ve gerçek kilit durumunu asla yansıtmayan
+  /// yanıltıcı "yetim" veri üretirdi.
   factory AppUserModel.newProfile({
     required String userId,
     required String name,
@@ -44,8 +50,6 @@ class AppUserModel {
       onboardingCompleted: false,
       settings: const {
         'themeMode': 'system',
-        'appLockEnabled': false,
-        'appLockType': 'none',
         'notificationsEnabled': true,
         'taskRemindersEnabled': true,
         'habitRemindersEnabled': true,

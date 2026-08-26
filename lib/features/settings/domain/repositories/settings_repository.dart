@@ -1,12 +1,18 @@
 import '../../../../core/errors/result.dart';
+import '../../../../core/theme/app_theme_mode.dart';
 import '../entities/notification_preferences.dart';
 
 /// Data katmanının uyması gereken sözleşme — ARCHITECTURE.md Bölüm 6.2.
-/// Bilinçli olarak minimal: yalnızca FAZ 13'ün ihtiyaç duyduğu bildirim
-/// tercihleri kapsanır (kullanıcı talimatı) — tema/kilit tercihi kalıcılığı
-/// FAZ 16 kapsamıdır (bkz. `core/theme/theme_mode_provider.dart` doc notu).
+/// Bildirim tercihlerinin yanı sıra tema tercihinin (DATABASE.md §2.3
+/// `themeMode`) kalıcılığını da kapsar — kilit tercihi kasıtlı olarak HARİÇ
+/// tutulur (bkz. `LockRepositoryImpl` doc notu: PIN/kilit durumu hiçbir
+/// zaman Firestore'a senkronize edilmez, tamamen cihaz-yerel kalır).
 abstract interface class SettingsRepository {
   Stream<NotificationPreferences> watchNotificationPreferences();
 
   Future<Result<void>> updateNotificationPreferences(NotificationPreferences preferences);
+
+  Stream<AppThemeMode> watchThemeMode();
+
+  Future<Result<void>> updateThemeMode(AppThemeMode mode);
 }

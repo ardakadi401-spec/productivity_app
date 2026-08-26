@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:productivity_app/core/errors/result.dart';
+import 'package:productivity_app/core/theme/app_theme_mode.dart';
 import 'package:productivity_app/features/notification/domain/entities/notification_request.dart';
 import 'package:productivity_app/features/notification/domain/repositories/notification_repository.dart';
 import 'package:productivity_app/features/notification/domain/utils/notification_id.dart';
@@ -81,6 +82,10 @@ class _FakeSettingsRepository implements SettingsRepository {
   @override
   Future<Result<void>> updateNotificationPreferences(NotificationPreferences preferences) =>
       throw UnimplementedError();
+  @override
+  Stream<AppThemeMode> watchThemeMode() => Stream.value(AppThemeMode.system);
+  @override
+  Future<Result<void>> updateThemeMode(AppThemeMode mode) => throw UnimplementedError();
 }
 
 class _FakeNotificationRepository implements NotificationRepository {

@@ -29,6 +29,7 @@ void main() {
     bool taskRemindersEnabled = true,
     bool habitRemindersEnabled = true,
     bool pomodoroNotificationsEnabled = true,
+    String themeMode = 'system',
     SettingsSyncStatusLocal syncStatus = SettingsSyncStatusLocal.synced,
   }) {
     final now = DateTime(2026, 1, 1);
@@ -37,6 +38,7 @@ void main() {
       ..taskRemindersEnabled = taskRemindersEnabled
       ..habitRemindersEnabled = habitRemindersEnabled
       ..pomodoroNotificationsEnabled = pomodoroNotificationsEnabled
+      ..themeMode = themeMode
       ..syncStatus = syncStatus
       ..localUpdatedAt = now;
   }
@@ -77,8 +79,12 @@ void main() {
     await subscription.cancel();
   });
 
-  test('toFirestoreSettingsPatch yalnızca 4 bildirim alt alanını içerir (dot-path)', () {
-    final m = model(notificationsEnabled: false, pomodoroNotificationsEnabled: false);
+  test('toFirestoreSettingsPatch bildirim alt alanlarını VE themeMode\'u içerir (dot-path)', () {
+    final m = model(
+      notificationsEnabled: false,
+      pomodoroNotificationsEnabled: false,
+      themeMode: 'amoled',
+    );
     final patch = m.toFirestoreSettingsPatch();
 
     expect(patch, {
@@ -86,16 +92,27 @@ void main() {
       'settings.taskRemindersEnabled': true,
       'settings.habitRemindersEnabled': true,
       'settings.pomodoroNotificationsEnabled': false,
+      'settings.themeMode': 'amoled',
     });
   });
 
-  test('fromFirestoreSettingsMap eksik alanlar için varsayılan true kullanır', () {
+  test('fromFirestoreSettingsMap eksik alanlar için varsayılan true/system kullanır', () {
     final m = SettingsLocalModel.fromFirestoreSettingsMap({'notificationsEnabled': false});
 
     expect(m.notificationsEnabled, isFalse);
     expect(m.taskRemindersEnabled, isTrue);
     expect(m.habitRemindersEnabled, isTrue);
     expect(m.pomodoroNotificationsEnabled, isTrue);
+    expect(m.themeMode, 'system');
     expect(m.syncStatus, SettingsSyncStatusLocal.synced);
+  });
+
+  test('copyWith yalnızca belirtilen alanları değiştirir, gerisini korur', () {
+    final original = model(themeMode: 'dark', notificationsEnabled: true);
+    final updated = original.copyWith(notificationsEnabled: false);
+
+    expect(updated.notificationsEnabled, isFalse);
+    expect(updated.themeMode, 'dark');
+    expect(updated.syncStatus, SettingsSyncStatusLocal.pendingUpdate);
   });
 }

@@ -18,6 +18,12 @@ class SettingsLocalModel {
   late bool habitRemindersEnabled;
   late bool pomodoroNotificationsEnabled;
 
+  /// `AppThemeMode.name` değeri (`'light'`/`'dark'`/`'amoled'`/`'system'`) —
+  /// Data katmanı dışına `AppThemeMode` enum'u olarak (bkz.
+  /// `SettingsRepositoryImpl`) sızdırılmadan önce burada ham string olarak
+  /// tutulur (Isar ilkel alan tercihi, diğer alanlarla tutarlı).
+  late String themeMode;
+
   // --- Isar-only senkronizasyon meta alanları — DATABASE.md §12.2 ---
   @Enumerated(EnumType.name)
   late SettingsSyncStatusLocal syncStatus;
@@ -32,6 +38,7 @@ class SettingsLocalModel {
       'settings.taskRemindersEnabled': taskRemindersEnabled,
       'settings.habitRemindersEnabled': habitRemindersEnabled,
       'settings.pomodoroNotificationsEnabled': pomodoroNotificationsEnabled,
+      'settings.themeMode': themeMode,
     };
   }
 
@@ -43,9 +50,31 @@ class SettingsLocalModel {
       ..taskRemindersEnabled = settings['taskRemindersEnabled'] as bool? ?? true
       ..habitRemindersEnabled = settings['habitRemindersEnabled'] as bool? ?? true
       ..pomodoroNotificationsEnabled = settings['pomodoroNotificationsEnabled'] as bool? ?? true
+      ..themeMode = settings['themeMode'] as String? ?? 'system'
       ..syncStatus = SettingsSyncStatusLocal.synced
       ..lastSyncedAt = now
       ..localUpdatedAt = now;
+  }
+
+  /// Tek satırlık ayar kaydının yalnızca belirtilen alanlarını değiştirip
+  /// gerisini korur — `notificationsEnabled` güncellenirken `themeMode`'un
+  /// (veya tersi) sessizce sıfırlanmasını/kaybolmasını önler.
+  SettingsLocalModel copyWith({
+    bool? notificationsEnabled,
+    bool? taskRemindersEnabled,
+    bool? habitRemindersEnabled,
+    bool? pomodoroNotificationsEnabled,
+    String? themeMode,
+  }) {
+    return SettingsLocalModel()
+      ..id = 0
+      ..notificationsEnabled = notificationsEnabled ?? this.notificationsEnabled
+      ..taskRemindersEnabled = taskRemindersEnabled ?? this.taskRemindersEnabled
+      ..habitRemindersEnabled = habitRemindersEnabled ?? this.habitRemindersEnabled
+      ..pomodoroNotificationsEnabled = pomodoroNotificationsEnabled ?? this.pomodoroNotificationsEnabled
+      ..themeMode = themeMode ?? this.themeMode
+      ..syncStatus = SettingsSyncStatusLocal.pendingUpdate
+      ..localUpdatedAt = DateTime.now();
   }
 }
 
