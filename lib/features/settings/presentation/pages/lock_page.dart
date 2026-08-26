@@ -58,6 +58,9 @@ class _LockPageState extends ConsumerState<LockPage> {
     try {
       settings = await ref.read(lockSettingsProvider.future);
     } catch (_) {
+      // Sessiz — kilit ayarları okunamazsa otomatik biyometrik denemesi
+      // atlanır; `build()` PIN alanını göstererek güvenli varsayılanda
+      // kalır, kullanıcı ekranda sıkışmaz.
       return;
     }
     if (!mounted || !settings.requiresBiometric) return;

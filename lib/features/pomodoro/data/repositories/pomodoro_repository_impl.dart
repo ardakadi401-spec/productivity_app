@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import '../../../../core/errors/failure.dart';
 import '../../../../core/errors/result.dart';
 import '../../../../core/exceptions/app_exceptions.dart';
@@ -154,5 +156,3 @@ class PomodoroRepositoryImpl implements PomodoroRepository, SyncableRepository {
     };
   }
 }
-
-void unawaited(Future<void> future) {}

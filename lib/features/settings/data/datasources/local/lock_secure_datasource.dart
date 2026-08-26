@@ -32,11 +32,6 @@ class LockSecureDatasource {
   Future<void> writeMethod(String method) =>
       _guard(() => _storage.write(key: _methodKey, value: method));
 
-  Future<void> clearPin() => _guard(() async {
-        await _storage.delete(key: _pinHashKey);
-        await _storage.delete(key: _pinSaltKey);
-      });
-
   Future<void> clearAll() => _guard(() async {
         await _storage.delete(key: _pinHashKey);
         await _storage.delete(key: _pinSaltKey);

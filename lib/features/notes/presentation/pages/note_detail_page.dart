@@ -118,8 +118,6 @@ class _CreateNoteFormState extends ConsumerState<_CreateNoteForm> {
     );
     final formState = ref.watch(provider);
     final controller = ref.read(provider.notifier);
-    final projects = ref.watch(projectListProvider(null)).valueOrNull ?? const <Project>[];
-    final tasks = ref.watch(taskListProvider(TaskFilter.none)).valueOrNull ?? const <Task>[];
 
     return Scaffold(
       appBar: AppBar(
@@ -146,13 +144,23 @@ class _CreateNoteFormState extends ConsumerState<_CreateNoteForm> {
                 onColorChanged: controller.setColor,
               ),
               const SizedBox(height: AppSpacing.md),
-              NoteLinkPickerWidget(
-                projects: projects,
-                selectedProjectId: formState.projectId,
-                onProjectChanged: controller.setProjectId,
-                tasks: tasks,
-                selectedTaskId: formState.taskId,
-                onTaskChanged: controller.setTaskId,
+              // Proje/görev listelerini yalnızca bu alt-ağaç izler
+              // (ARCHITECTURE.md §12.1) — sayfadaki başka bir görevin/
+              // projenin değişmesi başlık/içerik alanlarını veya Kaydet
+              // butonunu yeniden inşa etmez.
+              Consumer(
+                builder: (context, ref, _) {
+                  final projects = ref.watch(projectListProvider(null)).valueOrNull ?? const <Project>[];
+                  final tasks = ref.watch(taskListProvider(TaskFilter.none)).valueOrNull ?? const <Task>[];
+                  return NoteLinkPickerWidget(
+                    projects: projects,
+                    selectedProjectId: formState.projectId,
+                    onProjectChanged: controller.setProjectId,
+                    tasks: tasks,
+                    selectedTaskId: formState.taskId,
+                    onTaskChanged: controller.setTaskId,
+                  );
+                },
               ),
               const SizedBox(height: AppSpacing.md),
               TagPickerWidget(selectedTagIds: formState.tagIds, onToggle: controller.toggleTag),
@@ -220,8 +228,6 @@ class _EditNoteFormState extends ConsumerState<_EditNoteForm> {
     final provider = editNoteControllerProvider(widget.note);
     final formState = ref.watch(provider);
     final controller = ref.read(provider.notifier);
-    final projects = ref.watch(projectListProvider(null)).valueOrNull ?? const <Project>[];
-    final tasks = ref.watch(taskListProvider(TaskFilter.none)).valueOrNull ?? const <Task>[];
 
     return Scaffold(
       appBar: AppBar(
@@ -270,13 +276,22 @@ class _EditNoteFormState extends ConsumerState<_EditNoteForm> {
                 onColorChanged: controller.setColor,
               ),
               const SizedBox(height: AppSpacing.md),
-              NoteLinkPickerWidget(
-                projects: projects,
-                selectedProjectId: formState.projectId,
-                onProjectChanged: controller.setProjectId,
-                tasks: tasks,
-                selectedTaskId: formState.taskId,
-                onTaskChanged: controller.setTaskId,
+              // Proje/görev listelerini yalnızca bu alt-ağaç izler
+              // (ARCHITECTURE.md §12.1) — `_CreateNoteForm` ile aynı
+              // gerekçe.
+              Consumer(
+                builder: (context, ref, _) {
+                  final projects = ref.watch(projectListProvider(null)).valueOrNull ?? const <Project>[];
+                  final tasks = ref.watch(taskListProvider(TaskFilter.none)).valueOrNull ?? const <Task>[];
+                  return NoteLinkPickerWidget(
+                    projects: projects,
+                    selectedProjectId: formState.projectId,
+                    onProjectChanged: controller.setProjectId,
+                    tasks: tasks,
+                    selectedTaskId: formState.taskId,
+                    onTaskChanged: controller.setTaskId,
+                  );
+                },
               ),
               const SizedBox(height: AppSpacing.md),
               TagPickerWidget(selectedTagIds: formState.tagIds, onToggle: controller.toggleTag),

@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/errors/failure.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/utils/email_validator.dart';
 import '../../../../routes/route_paths/route_paths.dart';
 import '../../../../shared/buttons/app_button_widget.dart';
 import '../../../../shared/forms/app_text_field_widget.dart';
@@ -31,8 +32,6 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
   String? _passwordError;
   String? _confirmPasswordError;
 
-  static final _emailRegex = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
-
   @override
   void dispose() {
     _nameController.dispose();
@@ -45,7 +44,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
   bool _validate() {
     setState(() {
       _nameError = _nameController.text.trim().length < 2 ? 'Adını gir.' : null;
-      _emailError = _emailRegex.hasMatch(_emailController.text.trim())
+      _emailError = EmailValidator.isValid(_emailController.text.trim())
           ? null
           : 'Geçerli bir e-posta adresi gir.';
       _passwordError =

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -353,37 +355,69 @@ class _TaskDetailBody extends ConsumerWidget {
   }
 
   void _showAddSubTaskSheet(BuildContext context, TaskDetailController controller) {
-    final textController = TextEditingController();
-    AppBottomSheet.show<void>(
-      context,
-      child: Padding(
-        padding: EdgeInsets.only(
-          left: AppSpacing.lg,
-          right: AppSpacing.lg,
-          bottom: MediaQuery.of(context).viewInsets.bottom + AppSpacing.lg,
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: TextField(
-                controller: textController,
-                autofocus: true,
-                decoration: const InputDecoration(hintText: 'Alt görev başlığı'),
-                onSubmitted: (value) {
-                  controller.addSubTask(value);
-                  Navigator.of(context).pop();
-                },
-              ),
+    unawaited(
+      AppBottomSheet.show<void>(
+        context,
+        child: _AddSubTaskSheetContent(onSubmit: controller.addSubTask),
+      ),
+    );
+  }
+}
+
+/// `_showAddSubTaskSheet`'in içeriği — `TextEditingController`'ın kendi
+/// `dispose()`'unu, sheet'in kapanış ANİMASYONU tamamlanana kadar widget
+/// ağacında (dolayısıyla `TextField`'a bağlı) kalmasıyla doğru zamanda
+/// serbest bırakması için bilerek ayrı bir `StatefulWidget`'tır — bu
+/// içeriği çağıran yerin (stateless bir metod) döndürülen Future'ın
+/// tamamlanma anına bağlı elle dispose etmesi, kapanış animasyonu hâlâ
+/// sürerken "TextEditingController was used after being disposed"
+/// hatasına yol açar (widget testinde yakalanan gerçek bir regresyon).
+class _AddSubTaskSheetContent extends StatefulWidget {
+  const _AddSubTaskSheetContent({required this.onSubmit});
+
+  final void Function(String title) onSubmit;
+
+  @override
+  State<_AddSubTaskSheetContent> createState() => _AddSubTaskSheetContentState();
+}
+
+class _AddSubTaskSheetContentState extends State<_AddSubTaskSheetContent> {
+  final _textController = TextEditingController();
+
+  @override
+  void dispose() {
+    _textController.dispose();
+    super.dispose();
+  }
+
+  void _submit(BuildContext context) {
+    widget.onSubmit(_textController.text);
+    Navigator.of(context).pop();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.only(
+        left: AppSpacing.lg,
+        right: AppSpacing.lg,
+        bottom: MediaQuery.of(context).viewInsets.bottom + AppSpacing.lg,
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: TextField(
+              controller: _textController,
+              autofocus: true,
+              decoration: const InputDecoration(hintText: 'Alt görev başlığı'),
+              onSubmitted: (_) => _submit(context),
             ),
-            IconButton(
-              icon: const Icon(Icons.add),
-              onPressed: () {
-                controller.addSubTask(textController.text);
-                Navigator.of(context).pop();
-              },
-            ),
-          ],
-        ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.add),
+            onPressed: () => _submit(context),
+          ),
+        ],
       ),
     );
   }

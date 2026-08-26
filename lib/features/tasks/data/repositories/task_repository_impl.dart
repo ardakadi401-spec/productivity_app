@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import '../../../../core/errors/failure.dart';
 import '../../../../core/errors/result.dart';
 import '../../../../core/exceptions/app_exceptions.dart';
@@ -315,8 +317,3 @@ class TaskRepositoryImpl implements TaskRepository, SyncableRepository {
     };
   }
 }
-
-/// `unawaited` — kurucudaki arka plan senkronizasyonunun bilinçli olarak
-/// "fire and forget" olduğunu (ve `dangling future` lint uyarısını) açıkça
-/// belirtir.
-void unawaited(Future<void> future) {}

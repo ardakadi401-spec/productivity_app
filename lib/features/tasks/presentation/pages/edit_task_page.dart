@@ -98,7 +98,6 @@ class _EditTaskFormState extends ConsumerState<_EditTaskForm> {
     final provider = editTaskControllerProvider(widget.task);
     final formState = ref.watch(provider);
     final controller = ref.read(provider.notifier);
-    final projects = ref.watch(projectListProvider(null)).valueOrNull ?? const <Project>[];
 
     return Scaffold(
       appBar: AppBar(title: const Text('Görevi Düzenle')),
@@ -108,19 +107,27 @@ class _EditTaskFormState extends ConsumerState<_EditTaskForm> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              TaskFormFields(
-                titleController: _titleController,
-                descriptionController: _descriptionController,
-                titleError: _titleError,
-                priority: formState.priority,
-                onPriorityChanged: controller.setPriority,
-                dueDate: formState.dueDate,
-                onDueDateChanged: controller.setDueDate,
-                dueTime: formState.dueTime,
-                onDueTimeChanged: controller.setDueTime,
-                projects: projects,
-                selectedProjectId: formState.projectId,
-                onProjectChanged: controller.setProjectId,
+              // Proje listesini yalnızca bu alt-ağaç izler (`Consumer`) —
+              // ARCHITECTURE.md §12.1, `create_task_page.dart` ile aynı
+              // gerekçe.
+              Consumer(
+                builder: (context, ref, _) {
+                  final projects = ref.watch(projectListProvider(null)).valueOrNull ?? const <Project>[];
+                  return TaskFormFields(
+                    titleController: _titleController,
+                    descriptionController: _descriptionController,
+                    titleError: _titleError,
+                    priority: formState.priority,
+                    onPriorityChanged: controller.setPriority,
+                    dueDate: formState.dueDate,
+                    onDueDateChanged: controller.setDueDate,
+                    dueTime: formState.dueTime,
+                    onDueTimeChanged: controller.setDueTime,
+                    projects: projects,
+                    selectedProjectId: formState.projectId,
+                    onProjectChanged: controller.setProjectId,
+                  );
+                },
               ),
               const SizedBox(height: AppSpacing.lg),
               AppButton(

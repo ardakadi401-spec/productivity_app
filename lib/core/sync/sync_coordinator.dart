@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../network/connectivity_service.dart';
@@ -139,8 +141,6 @@ class SyncCoordinator {
     }
   }
 }
-
-void unawaited(Future<void> future) {}
 
 /// Uygulama ömrü boyunca tek bir `SyncCoordinator` örneği. `ref.listen`
 /// burada (provider'ın kendi `create` gövdesinde) çağrılır — ham bir

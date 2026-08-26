@@ -54,47 +54,57 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                 onChanged: controller.setQuery,
               ),
               const SizedBox(height: AppSpacing.sm),
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: [
-                    AppChip(
-                      label: 'Tümü',
-                      selected: state.typeFilter == null,
-                      onTap: () => controller.setTypeFilter(null),
+              // Yalnızca `typeFilter`/`todayOnly` izlenir (`.select`) —
+              // ARCHITECTURE.md §12.1: her tuş vuruşunda değişen `query`,
+              // bu filtre çubuğunu gereksiz yere yeniden inşa etmez.
+              Consumer(
+                builder: (context, ref, _) {
+                  final (typeFilter, todayOnly) = ref.watch(
+                    searchControllerProvider.select((s) => (s.typeFilter, s.todayOnly)),
+                  );
+                  return SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: [
+                        AppChip(
+                          label: 'Tümü',
+                          selected: typeFilter == null,
+                          onTap: () => controller.setTypeFilter(null),
+                        ),
+                        const SizedBox(width: AppSpacing.sm),
+                        AppChip(
+                          label: 'Görev',
+                          selected: typeFilter == SearchResultType.task,
+                          onTap: () => controller.setTypeFilter(SearchResultType.task),
+                        ),
+                        const SizedBox(width: AppSpacing.sm),
+                        AppChip(
+                          label: 'Proje',
+                          selected: typeFilter == SearchResultType.project,
+                          onTap: () => controller.setTypeFilter(SearchResultType.project),
+                        ),
+                        const SizedBox(width: AppSpacing.sm),
+                        AppChip(
+                          label: 'Not',
+                          selected: typeFilter == SearchResultType.note,
+                          onTap: () => controller.setTypeFilter(SearchResultType.note),
+                        ),
+                        const SizedBox(width: AppSpacing.sm),
+                        AppChip(
+                          label: 'Alışkanlık',
+                          selected: typeFilter == SearchResultType.habit,
+                          onTap: () => controller.setTypeFilter(SearchResultType.habit),
+                        ),
+                        const SizedBox(width: AppSpacing.sm),
+                        AppChip(
+                          label: 'Bugün',
+                          selected: todayOnly,
+                          onTap: () => controller.setTodayOnly(!todayOnly),
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: AppSpacing.sm),
-                    AppChip(
-                      label: 'Görev',
-                      selected: state.typeFilter == SearchResultType.task,
-                      onTap: () => controller.setTypeFilter(SearchResultType.task),
-                    ),
-                    const SizedBox(width: AppSpacing.sm),
-                    AppChip(
-                      label: 'Proje',
-                      selected: state.typeFilter == SearchResultType.project,
-                      onTap: () => controller.setTypeFilter(SearchResultType.project),
-                    ),
-                    const SizedBox(width: AppSpacing.sm),
-                    AppChip(
-                      label: 'Not',
-                      selected: state.typeFilter == SearchResultType.note,
-                      onTap: () => controller.setTypeFilter(SearchResultType.note),
-                    ),
-                    const SizedBox(width: AppSpacing.sm),
-                    AppChip(
-                      label: 'Alışkanlık',
-                      selected: state.typeFilter == SearchResultType.habit,
-                      onTap: () => controller.setTypeFilter(SearchResultType.habit),
-                    ),
-                    const SizedBox(width: AppSpacing.sm),
-                    AppChip(
-                      label: 'Bugün',
-                      selected: state.todayOnly,
-                      onTap: () => controller.setTodayOnly(!state.todayOnly),
-                    ),
-                  ],
-                ),
+                  );
+                },
               ),
               const SizedBox(height: AppSpacing.md),
               if (state.resultsAsync.isLoading)

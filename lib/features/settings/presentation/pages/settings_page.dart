@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -552,8 +554,6 @@ class _DeleteAccountTileState extends ConsumerState<_DeleteAccountTile> {
     );
   }
 }
-
-void unawaited(Future<void> future) {}
 
 /// "PIN" veya "İkisi" ilk kez seçildiğinde gösterilir — `SetPinUseCase`
 /// (min 4 haneli rakam) ile PIN'i güvenli şekilde kaydeder. `true` ile

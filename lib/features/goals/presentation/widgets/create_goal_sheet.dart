@@ -46,7 +46,6 @@ class _CreateGoalSheetState extends ConsumerState<CreateGoalSheet> {
   Widget build(BuildContext context) {
     final formState = ref.watch(createGoalControllerProvider);
     final controller = ref.read(createGoalControllerProvider.notifier);
-    final tasks = ref.watch(goalAvailableTasksProvider).valueOrNull ?? const [];
 
     return Padding(
       padding: EdgeInsets.only(
@@ -59,19 +58,26 @@ class _CreateGoalSheetState extends ConsumerState<CreateGoalSheet> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            GoalFormFields(
-              titleController: _titleController,
-              descriptionController: _descriptionController,
-              titleError: _titleError,
-              periodType: formState.periodType,
-              onPeriodTypeChanged: controller.setPeriodType,
-              progressType: formState.progressType,
-              onProgressTypeChanged: controller.setProgressType,
-              manualProgress: formState.manualProgress,
-              onManualProgressChanged: controller.setManualProgress,
-              linkedTaskIds: formState.linkedTaskIds,
-              onToggleLinkedTask: controller.toggleLinkedTask,
-              availableTasks: tasks,
+            // Görev listesini yalnızca bu alt-ağaç izler (`Consumer`) —
+            // ARCHITECTURE.md §12.1.
+            Consumer(
+              builder: (context, ref, _) {
+                final tasks = ref.watch(goalAvailableTasksProvider).valueOrNull ?? const [];
+                return GoalFormFields(
+                  titleController: _titleController,
+                  descriptionController: _descriptionController,
+                  titleError: _titleError,
+                  periodType: formState.periodType,
+                  onPeriodTypeChanged: controller.setPeriodType,
+                  progressType: formState.progressType,
+                  onProgressTypeChanged: controller.setProgressType,
+                  manualProgress: formState.manualProgress,
+                  onManualProgressChanged: controller.setManualProgress,
+                  linkedTaskIds: formState.linkedTaskIds,
+                  onToggleLinkedTask: controller.toggleLinkedTask,
+                  availableTasks: tasks,
+                );
+              },
             ),
             const SizedBox(height: AppSpacing.lg),
             AppButton(

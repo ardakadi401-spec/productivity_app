@@ -66,7 +66,6 @@ class _CreateTaskPageState extends ConsumerState<CreateTaskPage> {
     );
     final formState = ref.watch(provider);
     final controller = ref.read(provider.notifier);
-    final projects = ref.watch(projectListProvider(null)).valueOrNull ?? const <Project>[];
 
     return Scaffold(
       appBar: AppBar(title: const Text('Yeni Görev')),
@@ -76,19 +75,30 @@ class _CreateTaskPageState extends ConsumerState<CreateTaskPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              TaskFormFields(
-                titleController: _titleController,
-                descriptionController: _descriptionController,
-                titleError: _titleError,
-                priority: formState.priority,
-                onPriorityChanged: controller.setPriority,
-                dueDate: formState.dueDate,
-                onDueDateChanged: controller.setDueDate,
-                dueTime: formState.dueTime,
-                onDueTimeChanged: controller.setDueTime,
-                projects: projects,
-                selectedProjectId: formState.projectId,
-                onProjectChanged: controller.setProjectId,
+              // Proje listesini yalnızca bu alt-ağaç izler (`Consumer`) —
+              // sayfadaki başka bir projenin değişmesi AppBar'ı, Kaydet
+              // butonunu veya alt görev taslak listesini yeniden inşa
+              // etmez (ARCHITECTURE.md §12.1). `TaskFormFields` kasıtlı
+              // olarak provider-bağımsız (bkz. kendi doc notu) kaldığından
+              // watch burada, çağıran sayfada kalır.
+              Consumer(
+                builder: (context, ref, _) {
+                  final projects = ref.watch(projectListProvider(null)).valueOrNull ?? const <Project>[];
+                  return TaskFormFields(
+                    titleController: _titleController,
+                    descriptionController: _descriptionController,
+                    titleError: _titleError,
+                    priority: formState.priority,
+                    onPriorityChanged: controller.setPriority,
+                    dueDate: formState.dueDate,
+                    onDueDateChanged: controller.setDueDate,
+                    dueTime: formState.dueTime,
+                    onDueTimeChanged: controller.setDueTime,
+                    projects: projects,
+                    selectedProjectId: formState.projectId,
+                    onProjectChanged: controller.setProjectId,
+                  );
+                },
               ),
               const SizedBox(height: AppSpacing.md),
               _DraftSubTasksSection(
