@@ -11,6 +11,7 @@ import '../../domain/usecases/reset_password_usecase.dart';
 import '../../domain/usecases/sign_in_with_email_usecase.dart';
 import '../../domain/usecases/sign_in_with_google_usecase.dart';
 import '../../domain/usecases/sign_out_usecase.dart';
+import '../../domain/usecases/update_profile_usecase.dart';
 
 // --- Service / Data katmanı — ARCHITECTURE.md Bölüm 5.2 ---
 
@@ -50,6 +51,10 @@ final signOutUseCaseProvider = Provider<SignOutUseCase>((ref) {
 
 final deleteAccountUseCaseProvider = Provider<DeleteAccountUseCase>((ref) {
   return DeleteAccountUseCase(ref.watch(authRepositoryProvider));
+});
+
+final updateProfileUseCaseProvider = Provider<UpdateProfileUseCase>((ref) {
+  return UpdateProfileUseCase(ref.watch(authRepositoryProvider));
 });
 
 /// Oturum durumu — STATE_MANAGEMENT.md Bölüm 4.2: kök seviyede,

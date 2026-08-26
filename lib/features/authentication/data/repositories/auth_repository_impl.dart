@@ -52,6 +52,14 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<Result<void>> deleteAccount() => _guard(() => _datasource.deleteAccount());
 
+  @override
+  Future<Result<AppUser>> updateProfile({required String name}) {
+    return _guard(() async {
+      final model = await _datasource.updateProfile(name: name);
+      return AppUserMapper.toEntity(model);
+    });
+  }
+
   Future<Result<T>> _guard<T>(Future<T> Function() action) async {
     try {
       return Ok(await action());

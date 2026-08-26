@@ -73,6 +73,29 @@ class AuthRemoteDatasource {
     }
   }
 
+  /// Yalnızca görünen ad düzenlenebilir (bkz. `AuthRepository.updateProfile`
+  /// doc yorumu — e-posta/şifre için Firebase yeniden-kimlik-doğrulama
+  /// ister, kapsam dışı). Hem Firestore profil dokümanı HEM Firebase Auth'un
+  /// kendi `displayName`'i güncellenir — ikincisi, `authStateChanges`'in
+  /// Firestore dokümanı henüz oluşmamışken düştüğü `_minimalProfileFrom`
+  /// yoluyla tutarsız bir isim göstermesini önler.
+  Future<AppUserModel> updateProfile({required String name}) async {
+    final user = _authService.currentUser;
+    if (user == null) throw const AuthException('user-not-authenticated');
+    try {
+      await _firestore.collection('users').doc(user.uid).update({
+        'name': name,
+        'updatedAt': Timestamp.now(),
+      });
+      await _authService.updateDisplayName(name);
+      return await _fetchProfile(user.uid) ?? _minimalProfileFrom(user);
+    } on fb.FirebaseAuthException catch (e) {
+      throw AuthException(e.code);
+    } catch (e) {
+      throw UnknownException(e.toString());
+    }
+  }
+
   Future<void> resetPassword({required String email}) async {
     try {
       await _authService.sendPasswordResetEmail(email: email);

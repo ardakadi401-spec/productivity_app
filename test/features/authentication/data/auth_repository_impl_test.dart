@@ -133,4 +133,31 @@ void main() {
 
     expect(user?.email, 'a@b.com');
   });
+
+  group('updateProfile', () {
+    test('başarılı olduğunda güncellenmiş AppUser ile Ok döner', () async {
+      when(() => datasource.updateProfile(name: any(named: 'name')))
+          .thenAnswer((_) async => AppUserModel.newProfile(
+                userId: 'u1',
+                name: 'Yeni Ad',
+                email: 'a@b.com',
+                authProvider: 'email',
+              ));
+
+      final result = await repository.updateProfile(name: 'Yeni Ad');
+
+      expect(result, isA<Ok<dynamic>>());
+      expect((result as Ok).value.name, 'Yeni Ad');
+      verify(() => datasource.updateProfile(name: 'Yeni Ad')).called(1);
+    });
+
+    test('user-not-authenticated AuthException -> AuthFailure', () async {
+      when(() => datasource.updateProfile(name: any(named: 'name')))
+          .thenThrow(const AuthException('user-not-authenticated'));
+
+      final result = await repository.updateProfile(name: 'Yeni Ad');
+
+      expect((result as Err).failure, isA<AuthFailure>());
+    });
+  });
 }

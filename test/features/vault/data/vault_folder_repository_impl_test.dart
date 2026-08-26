@@ -2,7 +2,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:productivity_app/core/errors/failure.dart';
 import 'package:productivity_app/core/errors/result.dart';
-import 'package:productivity_app/core/exceptions/app_exceptions.dart';
 import 'package:productivity_app/core/network/connectivity_service.dart';
 import 'package:productivity_app/features/vault/data/datasources/local/vault_folder_local_datasource.dart';
 import 'package:productivity_app/features/vault/data/datasources/local/vault_local_datasource.dart';

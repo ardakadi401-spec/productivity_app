@@ -27,4 +27,10 @@ abstract interface class AuthRepository {
   Future<Result<void>> signOut();
 
   Future<Result<void>> deleteAccount();
+
+  /// Profil ekranından — şu an yalnızca görünen ad düzenlenebilir. E-posta/
+  /// şifre değişikliği Firebase'in yeniden-kimlik-doğrulama gerektiren ayrı
+  /// akışlarını gerektirir (`updateEmail`/`updatePassword`), bilinçli olarak
+  /// bu ilk sürümün kapsamı dışında bırakıldı.
+  Future<Result<AppUser>> updateProfile({required String name});
 }

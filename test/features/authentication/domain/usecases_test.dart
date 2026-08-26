@@ -9,6 +9,7 @@ import 'package:productivity_app/features/authentication/domain/usecases/reset_p
 import 'package:productivity_app/features/authentication/domain/usecases/sign_in_with_email_usecase.dart';
 import 'package:productivity_app/features/authentication/domain/usecases/sign_in_with_google_usecase.dart';
 import 'package:productivity_app/features/authentication/domain/usecases/sign_out_usecase.dart';
+import 'package:productivity_app/features/authentication/domain/usecases/update_profile_usecase.dart';
 
 const _user = AppUser(
   uid: 'u1',
@@ -28,6 +29,8 @@ class _FakeAuthRepository implements AuthRepository {
   String? lastResetEmail;
   bool signOutCalled = false;
   bool deleteAccountCalled = false;
+  Result<AppUser>? updateProfileResult;
+  String? lastUpdatedName;
 
   @override
   Stream<AppUser?> get authStateChanges => const Stream.empty();
@@ -67,6 +70,12 @@ class _FakeAuthRepository implements AuthRepository {
   Future<Result<void>> deleteAccount() async {
     deleteAccountCalled = true;
     return voidResult!;
+  }
+
+  @override
+  Future<Result<AppUser>> updateProfile({required String name}) async {
+    lastUpdatedName = name;
+    return updateProfileResult!;
   }
 }
 
@@ -117,5 +126,12 @@ void main() {
     repo.voidResult = const Ok(null);
     await DeleteAccountUseCase(repo)();
     expect(repo.deleteAccountCalled, isTrue);
+  });
+
+  test('UpdateProfileUseCase adı repository\'ye iletir', () async {
+    repo.updateProfileResult = const Ok(_user);
+    final result = await UpdateProfileUseCase(repo).call(name: 'Yeni Ad');
+    expect(repo.lastUpdatedName, 'Yeni Ad');
+    expect(result, isA<Ok<AppUser>>());
   });
 }

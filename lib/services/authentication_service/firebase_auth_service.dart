@@ -83,6 +83,10 @@ class FirebaseAuthService {
     return credential;
   }
 
+  Future<void> updateDisplayName(String name) async {
+    await _firebaseAuth.currentUser?.updateDisplayName(name);
+  }
+
   Future<void> sendPasswordResetEmail({required String email}) {
     return _firebaseAuth.sendPasswordResetEmail(email: email);
   }

@@ -17,6 +17,8 @@ class FakeAuthRepository implements AuthRepository {
   Result<AppUser> emailResult = const Ok(testUser);
   Result<AppUser> registerResult = const Ok(testUser);
   Result<void> voidResult = const Ok(null);
+  Result<AppUser> updateProfileResult = const Ok(testUser);
+  String? lastUpdatedName;
 
   /// Test öncesi ayarlanacak "mevcut" oturum durumu — `null` = unauthenticated.
   AppUser? authStateValue;
@@ -57,4 +59,10 @@ class FakeAuthRepository implements AuthRepository {
 
   @override
   Future<Result<void>> deleteAccount() async => voidResult;
+
+  @override
+  Future<Result<AppUser>> updateProfile({required String name}) async {
+    lastUpdatedName = name;
+    return updateProfileResult;
+  }
 }

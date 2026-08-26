@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../features/authentication/presentation/pages/forgot_password_page.dart';
 import '../../features/authentication/presentation/pages/login_page.dart';
+import '../../features/authentication/presentation/pages/profile_page.dart';
 import '../../features/authentication/presentation/pages/register_page.dart';
 import '../../features/authentication/presentation/pages/splash_page.dart';
 import '../../features/authentication/presentation/pages/welcome_page.dart';
@@ -33,7 +34,6 @@ import '../guards/lock_guard.dart';
 import '../route_paths/route_paths.dart';
 import 'app_shell.dart';
 import 'component_gallery_screen.dart';
-import 'placeholder_screen.dart';
 
 /// FAZ 4 — 5 sekmeli `StatefulShellRoute.indexedStack` (bkz. `app_shell.dart`)
 /// artık ana uygulama kabuğu; Dashboard/Settings/Calendar/Projects-Tasks/
@@ -199,7 +199,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(path: RoutePaths.statistics, builder: (context, state) => const StatisticsPage()),
       GoRoute(path: RoutePaths.search, builder: (context, state) => const SearchPage()),
-      _placeholderRoute(RoutePaths.profile),
+      GoRoute(path: RoutePaths.profile, builder: (context, state) => const ProfilePage()),
       // Shell dışı bağımsız rota — ARCHITECTURE.md §9.3. FAZ 15 ile tam
       // işlevsel: `lockGuardRedirect` kilitliyken buraya yönlendirir.
       GoRoute(path: RoutePaths.lock, builder: (context, state) => const LockPage()),
@@ -211,13 +211,6 @@ final routerProvider = Provider<GoRouter>((ref) {
     ],
   );
 });
-
-GoRoute _placeholderRoute(String path) {
-  return GoRoute(
-    path: path,
-    builder: (context, state) => PlaceholderScreen(routeName: path),
-  );
-}
 
 /// GoRouter'ın `redirect`'ini `authStateProvider` değişikliklerine bağlayan
 /// köprü — GoRouter kendisi yeniden oluşturulmadan (navigasyon geçmişi
