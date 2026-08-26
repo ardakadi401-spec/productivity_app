@@ -21,6 +21,13 @@ class VaultItemLocalModel {
   @Enumerated(EnumType.name)
   late VaultItemCategoryLocal category;
 
+  /// `null` → köke ait kayıt. Filtreleme diğer feature'larla aynı desende
+  /// (Notes'un `projectId`/`taskId`'si gibi) Repository katmanında bellek içi
+  /// uygulanır; bu yüzden burada bir Isar sorgu metodu ÜRETİLMEZ, yalnızca
+  /// tutarlılık için indekslenir.
+  @Index()
+  String? folderId;
+
   String? username;
   String? encryptedPassword;
   String? url;
@@ -42,6 +49,7 @@ class VaultItemLocalModel {
       'itemId': itemId,
       'title': title,
       'category': category.name,
+      'folderId': folderId,
       'username': username,
       'encryptedPassword': encryptedPassword,
       'url': url,
@@ -61,6 +69,7 @@ class VaultItemLocalModel {
         (c) => c.name == data['category'],
         orElse: () => VaultItemCategoryLocal.other,
       )
+      ..folderId = data['folderId'] as String?
       ..username = data['username'] as String?
       ..encryptedPassword = data['encryptedPassword'] as String?
       ..url = data['url'] as String?

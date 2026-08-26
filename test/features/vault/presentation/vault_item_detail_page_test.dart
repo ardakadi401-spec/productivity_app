@@ -23,7 +23,7 @@ class _FakeVaultRepository implements VaultRepository {
   String newVaultItemId() => 'new-id';
 
   @override
-  Stream<List<VaultItem>> watchVaultItems() => Stream.value(const []);
+  Stream<List<VaultItem>> watchVaultItems({String? folderId}) => Stream.value(const []);
 
   @override
   Stream<VaultItem?> watchVaultItem(String itemId) => Stream<VaultItem?>.multi((controller) {

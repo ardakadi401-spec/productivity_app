@@ -7,6 +7,11 @@ enum VaultItemCategory { app, project, other }
 /// `password`/`notes` alanları Data katmanında (bkz. `VaultEncryptionService`)
 /// şifrelenmiş olarak saklanır; Domain'e HER ZAMAN çözülmüş düz metin olarak
 /// gelir/gider — Domain, şifreleme detayından bağımsız kalır.
+///
+/// `folderId == null` → köke (kasanın en üst seviyesine) ait kayıt; aksi
+/// halde kaydın içinde yaşadığı [VaultFolder]. Kullanıcının isteğiyle
+/// (ör. "ELS İNŞAAT > Şifreler > Yönetim Paneli Şifresi") gelen, sınırsız
+/// derinlikte iç içe klasörleme desteği (bkz. `VaultFolder.parentFolderId`).
 class VaultItem {
   const VaultItem({
     required this.itemId,
@@ -14,6 +19,7 @@ class VaultItem {
     required this.category,
     required this.createdAt,
     required this.updatedAt,
+    this.folderId,
     this.username,
     this.password,
     this.url,
@@ -23,6 +29,7 @@ class VaultItem {
   final String itemId;
   final String title;
   final VaultItemCategory category;
+  final String? folderId;
   final String? username;
   final String? password;
   final String? url;
@@ -33,6 +40,8 @@ class VaultItem {
   VaultItem copyWith({
     String? title,
     VaultItemCategory? category,
+    String? folderId,
+    bool clearFolderId = false,
     String? username,
     bool clearUsername = false,
     String? password,
@@ -47,6 +56,7 @@ class VaultItem {
       itemId: itemId,
       title: title ?? this.title,
       category: category ?? this.category,
+      folderId: clearFolderId ? null : (folderId ?? this.folderId),
       username: clearUsername ? null : (username ?? this.username),
       password: clearPassword ? null : (password ?? this.password),
       url: clearUrl ? null : (url ?? this.url),

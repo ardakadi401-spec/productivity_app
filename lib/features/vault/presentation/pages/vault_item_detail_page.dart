@@ -22,13 +22,18 @@ import '../providers/vault_providers.dart';
 /// aynı daha hafif desen izlenir: mutasyonlar doğrudan sayfadan `ref.read`
 /// ile usecase'lere yapılır.
 class VaultItemDetailPage extends ConsumerWidget {
-  const VaultItemDetailPage({super.key, this.itemId});
+  const VaultItemDetailPage({super.key, this.itemId, this.initialFolderId});
 
   final String? itemId;
 
+  /// Yalnızca yeni kayıt oluştururken (`itemId == null`) kullanılır — Kasa
+  /// Listesi'nin o an içinde bulunulan klasörü, yeni kayıt oraya
+  /// eklensin diye iletir.
+  final String? initialFolderId;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    if (itemId == null) return const _VaultItemForm(initial: null);
+    if (itemId == null) return _VaultItemForm(initial: null, initialFolderId: initialFolderId);
 
     final itemAsync = ref.watch(vaultItemDetailProvider(itemId!));
     return itemAsync.when(
@@ -57,9 +62,10 @@ class VaultItemDetailPage extends ConsumerWidget {
 }
 
 class _VaultItemForm extends ConsumerStatefulWidget {
-  const _VaultItemForm({required this.initial});
+  const _VaultItemForm({required this.initial, this.initialFolderId});
 
   final VaultItem? initial;
+  final String? initialFolderId;
 
   @override
   ConsumerState<_VaultItemForm> createState() => _VaultItemFormState();
@@ -111,6 +117,7 @@ class _VaultItemFormState extends ConsumerState<_VaultItemForm> {
         itemId: repository.newVaultItemId(),
         title: _titleController.text.trim(),
         category: _category,
+        folderId: widget.initialFolderId,
         username: _nullIfEmpty(_usernameController.text),
         password: _nullIfEmpty(_passwordController.text),
         url: _nullIfEmpty(_urlController.text),

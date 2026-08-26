@@ -33,8 +33,13 @@ class VaultRepositoryImpl implements VaultRepository, SyncableRepository {
   String newVaultItemId() => _remote.newVaultItemId();
 
   @override
-  Stream<List<VaultItem>> watchVaultItems() {
-    return _local.watchVaultItems().map((models) => models.map(_mapper.toEntity).toList());
+  Stream<List<VaultItem>> watchVaultItems({String? folderId}) {
+    return _local.watchVaultItems().map(
+          (models) => models
+              .where((m) => m.folderId == folderId)
+              .map(_mapper.toEntity)
+              .toList(),
+        );
   }
 
   @override

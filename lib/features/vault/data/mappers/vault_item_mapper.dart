@@ -16,6 +16,7 @@ class VaultItemMapper {
       itemId: model.itemId,
       title: model.title,
       category: VaultItemCategory.values.byName(model.category.name),
+      folderId: model.folderId,
       username: model.username,
       password: model.encryptedPassword == null ? null : _encryption.decrypt(model.encryptedPassword!),
       url: model.url,
@@ -37,6 +38,7 @@ class VaultItemMapper {
       ..itemId = item.itemId
       ..title = item.title
       ..category = VaultItemCategoryLocal.values.byName(item.category.name)
+      ..folderId = item.folderId
       ..username = item.username
       ..encryptedPassword = item.password == null ? null : _encryption.encrypt(item.password!)
       ..url = item.url

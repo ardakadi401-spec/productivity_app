@@ -106,6 +106,7 @@ class AuthRemoteDatasource {
     'statisticsSnapshots': null,
     'tags': null,
     'vaultItems': null,
+    'vaultFolders': null,
   };
 
   /// Bir kullanıcının hesabını sildiğinde Firestore'da yalnızca `users/{uid}`

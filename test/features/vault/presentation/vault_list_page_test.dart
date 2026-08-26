@@ -6,7 +6,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:productivity_app/core/errors/result.dart';
 import 'package:productivity_app/core/theme/app_theme.dart';
+import 'package:productivity_app/features/vault/domain/entities/vault_folder.dart';
 import 'package:productivity_app/features/vault/domain/entities/vault_item.dart';
+import 'package:productivity_app/features/vault/domain/repositories/vault_folder_repository.dart';
 import 'package:productivity_app/features/vault/domain/repositories/vault_repository.dart';
 import 'package:productivity_app/features/vault/presentation/pages/vault_item_detail_page.dart';
 import 'package:productivity_app/features/vault/presentation/pages/vault_list_page.dart';
@@ -21,11 +23,15 @@ class _FakeVaultRepository implements VaultRepository {
   String newVaultItemId() => 'new-item-id';
 
   @override
-  Stream<List<VaultItem>> watchVaultItems() => Stream<List<VaultItem>>.multi((controller) {
-        controller.add(items);
-        final sub = _controller.stream.listen(controller.add);
-        controller.onCancel = sub.cancel;
-      });
+  Stream<List<VaultItem>> watchVaultItems({String? folderId}) => Stream<List<VaultItem>>.multi((
+    controller,
+  ) {
+    void emit(List<VaultItem> all) =>
+        controller.add(all.where((i) => i.folderId == folderId).toList());
+    emit(items);
+    final sub = _controller.stream.listen(emit);
+    controller.onCancel = sub.cancel;
+  });
 
   @override
   Stream<VaultItem?> watchVaultItem(String itemId) => Stream.value(null);
@@ -44,31 +50,63 @@ class _FakeVaultRepository implements VaultRepository {
   Future<Result<void>> deleteVaultItem(String itemId) => throw UnimplementedError();
 }
 
-VaultItem _item(String id, String title) => VaultItem(
-      itemId: id,
-      title: title,
-      category: VaultItemCategory.app,
-      createdAt: DateTime(2026, 1, 1),
-      updatedAt: DateTime(2026, 1, 1),
-    );
+class _FakeVaultFolderRepository implements VaultFolderRepository {
+  List<VaultFolder> folders = const [];
 
-Future<GoRouter> _pumpWithRouter(WidgetTester tester, {required _FakeVaultRepository repository}) async {
+  @override
+  String newVaultFolderId() => 'new-folder-id';
+
+  @override
+  Stream<List<VaultFolder>> watchVaultFolders({String? parentFolderId}) =>
+      Stream.value(folders.where((f) => f.parentFolderId == parentFolderId).toList());
+
+  @override
+  Stream<VaultFolder?> watchVaultFolder(String folderId) =>
+      Stream.value(folders.where((f) => f.folderId == folderId).firstOrNull);
+
+  @override
+  Future<Result<VaultFolder>> createVaultFolder(VaultFolder folder) => throw UnimplementedError();
+  @override
+  Future<Result<VaultFolder>> renameVaultFolder(String folderId, String name) =>
+      throw UnimplementedError();
+  @override
+  Future<Result<void>> deleteVaultFolder(String folderId) => throw UnimplementedError();
+}
+
+VaultItem _item(String id, String title) => VaultItem(
+  itemId: id,
+  title: title,
+  category: VaultItemCategory.app,
+  createdAt: DateTime(2026, 1, 1),
+  updatedAt: DateTime(2026, 1, 1),
+);
+
+Future<GoRouter> _pumpWithRouter(
+  WidgetTester tester, {
+  required _FakeVaultRepository repository,
+  _FakeVaultFolderRepository? folderRepository,
+}) async {
   final router = GoRouter(
     initialLocation: '/list',
     routes: [
-      GoRoute(path: '/list', builder: (_, _) => const Scaffold(body: VaultListPage())),
-      GoRoute(path: '/vault/new', builder: (_, _) => const VaultItemDetailPage()),
+      GoRoute(path: '/list', builder: (_, _) => const Scaffold(body: VaultListPage(folderId: null))),
       GoRoute(
-        path: '/vault/:itemId',
-        builder: (_, state) =>
-            Scaffold(body: Text('Kasa Kaydı: ${state.pathParameters['itemId']}')),
+        path: '/vault/new',
+        builder: (_, state) => VaultItemDetailPage(initialFolderId: state.extra as String?),
+      ),
+      GoRoute(
+        path: '/vault/item/:itemId',
+        builder: (_, state) => Scaffold(body: Text('Kasa Kaydı: ${state.pathParameters['itemId']}')),
       ),
     ],
   );
 
   await tester.pumpWidget(
     ProviderScope(
-      overrides: [vaultRepositoryProvider.overrideWithValue(repository)],
+      overrides: [
+        vaultRepositoryProvider.overrideWithValue(repository),
+        vaultFolderRepositoryProvider.overrideWithValue(folderRepository ?? _FakeVaultFolderRepository()),
+      ],
       child: MaterialApp.router(theme: AppTheme.light, routerConfig: router),
     ),
   );
@@ -88,11 +126,25 @@ void main() {
       ..items = [_item('v1', 'Zeta Hesabı'), _item('v2', 'Alfa Hesabı')];
     await _pumpWithRouter(tester, repository: repository);
 
-    final titles = tester
-        .widgetList<Text>(find.textContaining('Hesabı'))
-        .map((t) => t.data)
-        .toList();
+    final titles = tester.widgetList<Text>(find.textContaining('Hesabı')).map((t) => t.data).toList();
     expect(titles, ['Alfa Hesabı', 'Zeta Hesabı']);
+  });
+
+  testWidgets('kök klasörler kayıtlarla birlikte listelenir', (tester) async {
+    final repository = _FakeVaultRepository()..items = [_item('v1', 'GitHub')];
+    final folderRepository = _FakeVaultFolderRepository()
+      ..folders = [
+        VaultFolder(
+          folderId: 'f1',
+          name: 'ELS İNŞAAT',
+          createdAt: DateTime(2026, 1, 1),
+          updatedAt: DateTime(2026, 1, 1),
+        ),
+      ];
+    await _pumpWithRouter(tester, repository: repository, folderRepository: folderRepository);
+
+    expect(find.text('ELS İNŞAAT'), findsOneWidget);
+    expect(find.text('GitHub'), findsOneWidget);
   });
 
   testWidgets(
@@ -116,6 +168,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(repository.lastCreated?.title, 'Netflix');
+      expect(repository.lastCreated?.folderId, isNull);
       expect(find.text('Kasan henüz boş'), findsNothing);
     },
   );

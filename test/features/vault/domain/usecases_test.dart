@@ -27,12 +27,16 @@ class _FakeVaultRepository implements VaultRepository {
   VaultItem? lastUpdated;
   String? lastDeletedId;
   String? lastWatchedId;
+  String? lastFolderFilter;
 
   @override
   String newVaultItemId() => 'generated-id';
 
   @override
-  Stream<List<VaultItem>> watchVaultItems() => Stream.value(watchItemsResult);
+  Stream<List<VaultItem>> watchVaultItems({String? folderId}) {
+    lastFolderFilter = folderId;
+    return Stream.value(watchItemsResult);
+  }
 
   @override
   Stream<VaultItem?> watchVaultItem(String itemId) {

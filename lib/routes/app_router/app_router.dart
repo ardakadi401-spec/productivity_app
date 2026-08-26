@@ -179,10 +179,18 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: RoutePaths.noteDetail,
         builder: (context, state) => NoteDetailPage(noteId: state.pathParameters['noteId']!),
       ),
-      GoRoute(path: RoutePaths.vault, builder: (context, state) => const VaultListPage()),
+      GoRoute(path: RoutePaths.vault, builder: (context, state) => const VaultListPage(folderId: null)),
+      GoRoute(
+        path: RoutePaths.vaultFolder,
+        builder: (context, state) =>
+            VaultListPage(folderId: state.pathParameters['folderId']!),
+      ),
       GoRoute(
         path: RoutePaths.createVaultItem,
-        builder: (context, state) => const VaultItemDetailPage(),
+        // Kasa Listesi'nin "Yeni Kayıt" eylemi, o an içinde bulunulan
+        // klasörü `extra` ile iletir — Notes'un `CreateNoteArgs` deseniyle
+        // aynı (SCREENS.md §4.8/§4.10 karşılığı yeni bir alan).
+        builder: (context, state) => VaultItemDetailPage(initialFolderId: state.extra as String?),
       ),
       GoRoute(
         path: RoutePaths.vaultItemDetail,

@@ -44,37 +44,42 @@ const VaultItemLocalModelSchema = CollectionSchema(
       name: r'encryptedPassword',
       type: IsarType.string,
     ),
-    r'isDeleted': PropertySchema(
+    r'folderId': PropertySchema(
       id: 5,
+      name: r'folderId',
+      type: IsarType.string,
+    ),
+    r'isDeleted': PropertySchema(
+      id: 6,
       name: r'isDeleted',
       type: IsarType.bool,
     ),
-    r'itemId': PropertySchema(id: 6, name: r'itemId', type: IsarType.string),
+    r'itemId': PropertySchema(id: 7, name: r'itemId', type: IsarType.string),
     r'lastSyncedAt': PropertySchema(
-      id: 7,
+      id: 8,
       name: r'lastSyncedAt',
       type: IsarType.dateTime,
     ),
     r'localUpdatedAt': PropertySchema(
-      id: 8,
+      id: 9,
       name: r'localUpdatedAt',
       type: IsarType.dateTime,
     ),
     r'syncStatus': PropertySchema(
-      id: 9,
+      id: 10,
       name: r'syncStatus',
       type: IsarType.string,
       enumMap: _VaultItemLocalModelsyncStatusEnumValueMap,
     ),
-    r'title': PropertySchema(id: 10, name: r'title', type: IsarType.string),
+    r'title': PropertySchema(id: 11, name: r'title', type: IsarType.string),
     r'updatedAt': PropertySchema(
-      id: 11,
+      id: 12,
       name: r'updatedAt',
       type: IsarType.dateTime,
     ),
-    r'url': PropertySchema(id: 12, name: r'url', type: IsarType.string),
+    r'url': PropertySchema(id: 13, name: r'url', type: IsarType.string),
     r'username': PropertySchema(
-      id: 13,
+      id: 14,
       name: r'username',
       type: IsarType.string,
     ),
@@ -94,6 +99,19 @@ const VaultItemLocalModelSchema = CollectionSchema(
       properties: [
         IndexPropertySchema(
           name: r'itemId',
+          type: IndexType.hash,
+          caseSensitive: true,
+        ),
+      ],
+    ),
+    r'folderId': IndexSchema(
+      id: 6340065978996931043,
+      name: r'folderId',
+      unique: false,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'folderId',
           type: IndexType.hash,
           caseSensitive: true,
         ),
@@ -128,6 +146,12 @@ int _vaultItemLocalModelEstimateSize(
       bytesCount += 3 + value.length * 3;
     }
   }
+  {
+    final value = object.folderId;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
   bytesCount += 3 + object.itemId.length * 3;
   bytesCount += 3 + object.syncStatus.name.length * 3;
   bytesCount += 3 + object.title.length * 3;
@@ -157,15 +181,16 @@ void _vaultItemLocalModelSerialize(
   writer.writeDateTime(offsets[2], object.deletedAt);
   writer.writeString(offsets[3], object.encryptedNotes);
   writer.writeString(offsets[4], object.encryptedPassword);
-  writer.writeBool(offsets[5], object.isDeleted);
-  writer.writeString(offsets[6], object.itemId);
-  writer.writeDateTime(offsets[7], object.lastSyncedAt);
-  writer.writeDateTime(offsets[8], object.localUpdatedAt);
-  writer.writeString(offsets[9], object.syncStatus.name);
-  writer.writeString(offsets[10], object.title);
-  writer.writeDateTime(offsets[11], object.updatedAt);
-  writer.writeString(offsets[12], object.url);
-  writer.writeString(offsets[13], object.username);
+  writer.writeString(offsets[5], object.folderId);
+  writer.writeBool(offsets[6], object.isDeleted);
+  writer.writeString(offsets[7], object.itemId);
+  writer.writeDateTime(offsets[8], object.lastSyncedAt);
+  writer.writeDateTime(offsets[9], object.localUpdatedAt);
+  writer.writeString(offsets[10], object.syncStatus.name);
+  writer.writeString(offsets[11], object.title);
+  writer.writeDateTime(offsets[12], object.updatedAt);
+  writer.writeString(offsets[13], object.url);
+  writer.writeString(offsets[14], object.username);
 }
 
 VaultItemLocalModel _vaultItemLocalModelDeserialize(
@@ -184,20 +209,21 @@ VaultItemLocalModel _vaultItemLocalModelDeserialize(
   object.deletedAt = reader.readDateTimeOrNull(offsets[2]);
   object.encryptedNotes = reader.readStringOrNull(offsets[3]);
   object.encryptedPassword = reader.readStringOrNull(offsets[4]);
+  object.folderId = reader.readStringOrNull(offsets[5]);
   object.id = id;
-  object.isDeleted = reader.readBool(offsets[5]);
-  object.itemId = reader.readString(offsets[6]);
-  object.lastSyncedAt = reader.readDateTimeOrNull(offsets[7]);
-  object.localUpdatedAt = reader.readDateTime(offsets[8]);
+  object.isDeleted = reader.readBool(offsets[6]);
+  object.itemId = reader.readString(offsets[7]);
+  object.lastSyncedAt = reader.readDateTimeOrNull(offsets[8]);
+  object.localUpdatedAt = reader.readDateTime(offsets[9]);
   object.syncStatus =
       _VaultItemLocalModelsyncStatusValueEnumMap[reader.readStringOrNull(
-        offsets[9],
+        offsets[10],
       )] ??
       VaultItemSyncStatusLocal.synced;
-  object.title = reader.readString(offsets[10]);
-  object.updatedAt = reader.readDateTime(offsets[11]);
-  object.url = reader.readStringOrNull(offsets[12]);
-  object.username = reader.readStringOrNull(offsets[13]);
+  object.title = reader.readString(offsets[11]);
+  object.updatedAt = reader.readDateTime(offsets[12]);
+  object.url = reader.readStringOrNull(offsets[13]);
+  object.username = reader.readStringOrNull(offsets[14]);
   return object;
 }
 
@@ -223,25 +249,27 @@ P _vaultItemLocalModelDeserializeProp<P>(
     case 4:
       return (reader.readStringOrNull(offset)) as P;
     case 5:
-      return (reader.readBool(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 6:
-      return (reader.readString(offset)) as P;
+      return (reader.readBool(offset)) as P;
     case 7:
-      return (reader.readDateTimeOrNull(offset)) as P;
+      return (reader.readString(offset)) as P;
     case 8:
-      return (reader.readDateTime(offset)) as P;
+      return (reader.readDateTimeOrNull(offset)) as P;
     case 9:
+      return (reader.readDateTime(offset)) as P;
+    case 10:
       return (_VaultItemLocalModelsyncStatusValueEnumMap[reader
                   .readStringOrNull(offset)] ??
               VaultItemSyncStatusLocal.synced)
           as P;
-    case 10:
-      return (reader.readString(offset)) as P;
     case 11:
-      return (reader.readDateTime(offset)) as P;
+      return (reader.readString(offset)) as P;
     case 12:
-      return (reader.readStringOrNull(offset)) as P;
+      return (reader.readDateTime(offset)) as P;
     case 13:
+      return (reader.readStringOrNull(offset)) as P;
+    case 14:
       return (reader.readStringOrNull(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -471,6 +499,81 @@ extension VaultItemLocalModelQueryWhere
                 indexName: r'itemId',
                 lower: [],
                 upper: [itemId],
+                includeUpper: false,
+              ),
+            );
+      }
+    });
+  }
+
+  QueryBuilder<VaultItemLocalModel, VaultItemLocalModel, QAfterWhereClause>
+  folderIdIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        IndexWhereClause.equalTo(indexName: r'folderId', value: [null]),
+      );
+    });
+  }
+
+  QueryBuilder<VaultItemLocalModel, VaultItemLocalModel, QAfterWhereClause>
+  folderIdIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        IndexWhereClause.between(
+          indexName: r'folderId',
+          lower: [null],
+          includeLower: false,
+          upper: [],
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<VaultItemLocalModel, VaultItemLocalModel, QAfterWhereClause>
+  folderIdEqualTo(String? folderId) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        IndexWhereClause.equalTo(indexName: r'folderId', value: [folderId]),
+      );
+    });
+  }
+
+  QueryBuilder<VaultItemLocalModel, VaultItemLocalModel, QAfterWhereClause>
+  folderIdNotEqualTo(String? folderId) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'folderId',
+                lower: [],
+                upper: [folderId],
+                includeUpper: false,
+              ),
+            )
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'folderId',
+                lower: [folderId],
+                includeLower: false,
+                upper: [],
+              ),
+            );
+      } else {
+        return query
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'folderId',
+                lower: [folderId],
+                includeLower: false,
+                upper: [],
+              ),
+            )
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'folderId',
+                lower: [],
+                upper: [folderId],
                 includeUpper: false,
               ),
             );
@@ -1069,6 +1172,165 @@ extension VaultItemLocalModelQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         FilterCondition.greaterThan(property: r'encryptedPassword', value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<VaultItemLocalModel, VaultItemLocalModel, QAfterFilterCondition>
+  folderIdIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'folderId'),
+      );
+    });
+  }
+
+  QueryBuilder<VaultItemLocalModel, VaultItemLocalModel, QAfterFilterCondition>
+  folderIdIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'folderId'),
+      );
+    });
+  }
+
+  QueryBuilder<VaultItemLocalModel, VaultItemLocalModel, QAfterFilterCondition>
+  folderIdEqualTo(String? value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'folderId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<VaultItemLocalModel, VaultItemLocalModel, QAfterFilterCondition>
+  folderIdGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'folderId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<VaultItemLocalModel, VaultItemLocalModel, QAfterFilterCondition>
+  folderIdLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'folderId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<VaultItemLocalModel, VaultItemLocalModel, QAfterFilterCondition>
+  folderIdBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'folderId',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<VaultItemLocalModel, VaultItemLocalModel, QAfterFilterCondition>
+  folderIdStartsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'folderId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<VaultItemLocalModel, VaultItemLocalModel, QAfterFilterCondition>
+  folderIdEndsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'folderId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<VaultItemLocalModel, VaultItemLocalModel, QAfterFilterCondition>
+  folderIdContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'folderId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<VaultItemLocalModel, VaultItemLocalModel, QAfterFilterCondition>
+  folderIdMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'folderId',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<VaultItemLocalModel, VaultItemLocalModel, QAfterFilterCondition>
+  folderIdIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'folderId', value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<VaultItemLocalModel, VaultItemLocalModel, QAfterFilterCondition>
+  folderIdIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(property: r'folderId', value: ''),
       );
     });
   }
@@ -2154,6 +2416,20 @@ extension VaultItemLocalModelQuerySortBy
   }
 
   QueryBuilder<VaultItemLocalModel, VaultItemLocalModel, QAfterSortBy>
+  sortByFolderId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'folderId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<VaultItemLocalModel, VaultItemLocalModel, QAfterSortBy>
+  sortByFolderIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'folderId', Sort.desc);
+    });
+  }
+
+  QueryBuilder<VaultItemLocalModel, VaultItemLocalModel, QAfterSortBy>
   sortByIsDeleted() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'isDeleted', Sort.asc);
@@ -2353,6 +2629,20 @@ extension VaultItemLocalModelQuerySortThenBy
   }
 
   QueryBuilder<VaultItemLocalModel, VaultItemLocalModel, QAfterSortBy>
+  thenByFolderId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'folderId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<VaultItemLocalModel, VaultItemLocalModel, QAfterSortBy>
+  thenByFolderIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'folderId', Sort.desc);
+    });
+  }
+
+  QueryBuilder<VaultItemLocalModel, VaultItemLocalModel, QAfterSortBy>
   thenById() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'id', Sort.asc);
@@ -2537,6 +2827,13 @@ extension VaultItemLocalModelQueryWhereDistinct
   }
 
   QueryBuilder<VaultItemLocalModel, VaultItemLocalModel, QDistinct>
+  distinctByFolderId({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'folderId', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<VaultItemLocalModel, VaultItemLocalModel, QDistinct>
   distinctByIsDeleted() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'isDeleted');
@@ -2640,6 +2937,13 @@ extension VaultItemLocalModelQueryProperty
   encryptedPasswordProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'encryptedPassword');
+    });
+  }
+
+  QueryBuilder<VaultItemLocalModel, String?, QQueryOperations>
+  folderIdProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'folderId');
     });
   }
 

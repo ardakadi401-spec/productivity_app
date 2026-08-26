@@ -34,6 +34,17 @@ class VaultLocalDatasource {
     }
   }
 
+  /// Yalnızca [VaultFolderRepositoryImpl]'ın rekürsif klasör silme
+  /// (cascade delete) akışı için — silinecek klasör ağacına ait kayıtları
+  /// bulabilmek üzere TÜM (silinmemiş) kayıtları tek seferde döner.
+  Future<List<VaultItemLocalModel>> getAll() async {
+    try {
+      return await _isar.vaultItemLocalModels.filter().isDeletedEqualTo(false).findAll();
+    } catch (e) {
+      throw CacheException(e.toString());
+    }
+  }
+
   Future<List<VaultItemLocalModel>> getPendingSync() async {
     try {
       return await _isar.vaultItemLocalModels

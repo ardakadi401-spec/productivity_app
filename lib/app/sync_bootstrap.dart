@@ -42,6 +42,7 @@ final List<Override> syncBootstrapOverrides = [
       ref.watch(statisticsSnapshotRepositoryProvider) as SyncableRepository,
       ref.watch(settingsRepositoryProvider) as SyncableRepository,
       ref.watch(vaultRepositoryProvider) as SyncableRepository,
+      ref.watch(vaultFolderRepositoryProvider) as SyncableRepository,
     ],
   ),
 ];

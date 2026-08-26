@@ -36,10 +36,17 @@ class RoutePaths {
   static const String profile = '/profile';
 
   // Şifre Kasası — 23 resmi ekranın dışında, kullanıcı isteğiyle sonradan
-  // eklendi (bkz. `features/vault/`).
+  // eklendi (bkz. `features/vault/`). Sınırsız derinlikte iç içe klasörleme
+  // desteklediğinden `item`/`folder` alt segmentleriyle ayrıştırılır —
+  // `/vault/:itemId` gibi tek bir dinamik segment, `/vault/new` ve
+  // `/vault/folder/:folderId` ile göç edebilirdi (bkz. Tasks'ın
+  // `/tasks/:taskId` vs `/tasks/new` sıralama hatası, ROADMAP.md canlı
+  // cihaz testinde bulundu) — segment adlarıyla bu belirsizlik en baştan
+  // ortadan kaldırılır.
   static const String vault = '/vault';
+  static const String vaultFolder = '/vault/folder/:folderId';
   static const String createVaultItem = '/vault/new';
-  static const String vaultItemDetail = '/vault/:itemId';
+  static const String vaultItemDetail = '/vault/item/:itemId';
 
   // Shell dışı bağımsız rota — ARCHITECTURE.md Bölüm 9.3.
   static const String lock = '/lock';
