@@ -12,6 +12,7 @@ import '../../domain/entities/project.dart';
 import '../../domain/repositories/project_repository.dart';
 import '../../domain/usecases/archive_project_usecase.dart';
 import '../../domain/usecases/create_project_usecase.dart';
+import '../../domain/usecases/delete_project_usecase.dart';
 import '../../domain/usecases/recalculate_project_progress_usecase.dart';
 import '../../domain/usecases/update_project_usecase.dart';
 import '../../domain/usecases/watch_project_usecase.dart';
@@ -55,6 +56,10 @@ final updateProjectUseCaseProvider = Provider<UpdateProjectUseCase>((ref) {
 
 final archiveProjectUseCaseProvider = Provider<ArchiveProjectUseCase>((ref) {
   return ArchiveProjectUseCase(ref.watch(projectRepositoryProvider));
+});
+
+final deleteProjectUseCaseProvider = Provider<DeleteProjectUseCase>((ref) {
+  return DeleteProjectUseCase(ref.watch(projectRepositoryProvider));
 });
 
 /// ARCHITECTURE.md §4 — Projects, Tasks Domain'ine (`watchTasksUseCaseProvider`)

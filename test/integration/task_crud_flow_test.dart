@@ -118,6 +118,8 @@ class _EmptyProjectRepository implements ProjectRepository {
     required int completedTaskCount,
   }) =>
       throw UnimplementedError();
+  @override
+  Future<Result<void>> deleteProject(String projectId) => throw UnimplementedError();
 }
 
 class _EmptyNoteRepository implements NoteRepository {

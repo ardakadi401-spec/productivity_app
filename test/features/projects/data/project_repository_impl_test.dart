@@ -150,6 +150,43 @@ void main() {
     });
   });
 
+  group('deleteProject', () {
+    test('isDeleted true ve syncStatus pendingDelete olarak işaretlenir', () async {
+      when(() => local.getByProjectId('p1')).thenAnswer((_) async => _model());
+      when(() => local.putProject(any())).thenAnswer((_) async {});
+
+      final result = await repository.deleteProject('p1');
+
+      expect(result, isA<Ok<void>>());
+      final captured =
+          verify(() => local.putProject(captureAny())).captured.single as ProjectLocalModel;
+      expect(captured.isDeleted, isTrue);
+      expect(captured.deletedAt, isNotNull);
+      expect(captured.syncStatus, ProjectSyncStatusLocal.pendingDelete);
+    });
+
+    test('bağlantı varken remote\'a da gönderilir', () async {
+      when(() => connectivity.isConnected).thenAnswer((_) async => true);
+      when(() => local.getByProjectId('p1')).thenAnswer((_) async => _model());
+      when(() => local.putProject(any())).thenAnswer((_) async {});
+      when(() => remote.setProject(any())).thenAnswer((_) async {});
+
+      await repository.deleteProject('p1');
+
+      verify(() => remote.setProject(any())).called(1);
+      final calls = verify(() => local.putProject(captureAny())).captured.cast<ProjectLocalModel>();
+      expect(calls.last.syncStatus, ProjectSyncStatusLocal.synced);
+    });
+
+    test('kayıt bulunamazsa CacheFailure döner', () async {
+      when(() => local.getByProjectId('missing')).thenAnswer((_) async => null);
+
+      final result = await repository.deleteProject('missing');
+
+      expect((result as Err).failure, isA<CacheFailure>());
+    });
+  });
+
   group('updateProjectProgress', () {
     test('0 görevli bir projede bölme hatası olmadan 0/0 yazar', () async {
       when(() => local.getByProjectId('p1')).thenAnswer((_) async => _model());

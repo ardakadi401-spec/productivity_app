@@ -4,6 +4,7 @@ import 'package:productivity_app/core/errors/result.dart';
 import 'package:productivity_app/features/projects/domain/entities/project.dart';
 import 'package:productivity_app/features/projects/domain/repositories/project_repository.dart';
 import 'package:productivity_app/features/projects/domain/usecases/archive_project_usecase.dart';
+import 'package:productivity_app/features/projects/domain/usecases/delete_project_usecase.dart';
 import 'package:productivity_app/features/projects/domain/usecases/create_project_usecase.dart';
 import 'package:productivity_app/features/projects/domain/usecases/recalculate_project_progress_usecase.dart';
 import 'package:productivity_app/features/projects/domain/usecases/update_project_usecase.dart';
@@ -37,6 +38,8 @@ class _FakeProjectRepository implements ProjectRepository {
   Project? lastUpdatedProject;
   ({String projectId, bool isArchived})? lastArchiveArgs;
   ({String projectId, int taskCount, int completedTaskCount})? lastProgressArgs;
+  Result<void>? deleteResult;
+  String? lastDeletedProjectId;
 
   @override
   String newProjectId() => 'generated-project-id';
@@ -80,6 +83,12 @@ class _FakeProjectRepository implements ProjectRepository {
     lastProgressArgs =
         (projectId: projectId, taskCount: taskCount, completedTaskCount: completedTaskCount);
     return projectResult!;
+  }
+
+  @override
+  Future<Result<void>> deleteProject(String projectId) async {
+    lastDeletedProjectId = projectId;
+    return deleteResult!;
   }
 }
 
@@ -157,6 +166,12 @@ void main() {
     repo.projectResult = Ok(_project());
     await ArchiveProjectUseCase(repo).call('p1', isArchived: true);
     expect(repo.lastArchiveArgs, (projectId: 'p1', isArchived: true));
+  });
+
+  test('DeleteProjectUseCase projectId\'yi iletir', () async {
+    repo.deleteResult = const Ok(null);
+    await DeleteProjectUseCase(repo).call('p1');
+    expect(repo.lastDeletedProjectId, 'p1');
   });
 
   test('WatchProjectsUseCase status filtresini iletir', () async {

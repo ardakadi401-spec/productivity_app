@@ -20,6 +20,15 @@ abstract interface class ProjectRepository {
 
   Future<Result<Project>> setProjectArchived(String projectId, {required bool isArchived});
 
+  /// Kalıcı (soft-delete) silme — DATABASE.md §13.1 ile aynı desen
+  /// (Task/Note/Habit'te zaten var olan). Bağlı görevler ETKİLENMEZ —
+  /// `projectId` alanları olduğu gibi kalır; Task Detail'in proje rozeti
+  /// zaten `null` bir proje karşısında sessizce gizlenir (bkz.
+  /// `_LinkedProjectChip`), bu yüzden Projects → Tasks yazma bağımlılığı
+  /// gerektiren bir cascade/unlink işlemine ihtiyaç yoktur (ARCHITECTURE.md
+  /// §10.2 tek yönlü okuma kuralını korur).
+  Future<Result<void>> deleteProject(String projectId);
+
   /// `taskCount`/`completedTaskCount` denormalize alanlarını dışarıdan
   /// (Tasks Domain UseCase'i üzerinden hesaplanmış) verilen değerlerle
   /// günceller — DATABASE.md §15.4 "atomic counter update" ile aynı desen

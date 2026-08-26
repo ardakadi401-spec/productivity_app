@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:productivity_app/core/errors/failure.dart';
 import 'package:productivity_app/core/errors/result.dart';
 import 'package:productivity_app/core/theme/app_theme.dart';
@@ -73,6 +74,19 @@ class _FakeProjectRepository implements ProjectRepository {
     final current = project;
     if (current == null) return const Err(CacheFailure('Proje bulunamadı.'));
     return Ok(current);
+  }
+
+  bool deleteCalled = false;
+  Result<void> deleteResult = const Ok(null);
+
+  @override
+  Future<Result<void>> deleteProject(String projectId) async {
+    deleteCalled = true;
+    if (deleteResult is Ok<void>) {
+      project = null;
+      _controller.add(null);
+    }
+    return deleteResult;
   }
 }
 
@@ -205,6 +219,37 @@ Future<void> _pump(
   await tester.pumpAndSettle();
 }
 
+/// Silme akışı `context.pop()` çağırdığından (go_router), gerçek bir
+/// `GoRouter` ile "liste -> detay" yığını kurulur (bkz. aynı gerekçe
+/// `task_detail_page_test.dart`'ta) — yalnızca `MaterialApp` kullanmak
+/// `GoRouter not found` hatasına yol açar.
+Future<GoRouter> _pumpWithRouter(
+  WidgetTester tester, {
+  required _FakeProjectRepository projectRepository,
+}) async {
+  final router = GoRouter(
+    initialLocation: '/list',
+    routes: [
+      GoRoute(path: '/list', builder: (_, _) => const Scaffold(body: Text('Proje Listesi'))),
+      GoRoute(path: '/detail', builder: (_, _) => const ProjectDetailPage(projectId: 'p1')),
+    ],
+  );
+
+  await tester.pumpWidget(
+    ProviderScope(
+      overrides: [
+        projectRepositoryProvider.overrideWithValue(projectRepository),
+        taskRepositoryProvider.overrideWithValue(_EmptyTaskRepository()),
+        noteRepositoryProvider.overrideWithValue(_EmptyNoteRepository()),
+      ],
+      child: MaterialApp.router(theme: AppTheme.light, routerConfig: router),
+    ),
+  );
+  router.push('/detail');
+  await tester.pumpAndSettle();
+  return router;
+}
+
 void main() {
   testWidgets('proje bulunamazsa "Bu proje artık mevcut değil." gösterir', (tester) async {
     await _pump(tester, projectRepository: _FakeProjectRepository(null));
@@ -278,6 +323,34 @@ void main() {
     await tester.pump();
 
     expect(repository.lastArchiveCall, (isArchived: false));
+  });
+
+  testWidgets('Sil -> Vazgeç: deleteProject çağrılmaz, ekranda kalınır', (tester) async {
+    final repository = _FakeProjectRepository(_project());
+    await _pumpWithRouter(tester, projectRepository: repository);
+
+    await tester.tap(find.byTooltip('Sil'));
+    await tester.pumpAndSettle();
+    expect(find.text('Projeyi Sil'), findsOneWidget);
+
+    await tester.tap(find.text('Vazgeç'));
+    await tester.pumpAndSettle();
+
+    expect(repository.deleteCalled, isFalse);
+    expect(find.text('Web Sitesi Yenileme'), findsWidgets);
+  });
+
+  testWidgets('Sil -> Onayla: deleteProject çağrılır ve bir önceki ekrana dönülür', (tester) async {
+    final repository = _FakeProjectRepository(_project());
+    await _pumpWithRouter(tester, projectRepository: repository);
+
+    await tester.tap(find.byTooltip('Sil'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Sil').last);
+    await tester.pumpAndSettle();
+
+    expect(repository.deleteCalled, isTrue);
+    expect(find.text('Proje Listesi'), findsOneWidget);
   });
 
   testWidgets('Düzenle ikonuna dokununca mevcut başlıkla EditProjectSheet açılır', (tester) async {

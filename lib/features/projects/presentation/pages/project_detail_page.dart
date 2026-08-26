@@ -93,6 +93,31 @@ class ProjectDetailPage extends ConsumerWidget {
                     }
                   },
           ),
+          IconButton(
+            icon: const Icon(Icons.delete_outline),
+            tooltip: 'Sil',
+            onPressed: projectAsync.valueOrNull == null
+                ? null
+                : () async {
+                    final project = projectAsync.value!;
+                    final confirmed = await AppDialog.show(
+                      context,
+                      title: 'Projeyi Sil',
+                      description:
+                          '"${project.title}" projesini silmek istediğine emin misin? Bağlı görevler silinmez, yalnızca proje bağlantıları kaldırılır. Bu işlem geri alınamaz.',
+                      confirmLabel: 'Sil',
+                      isDestructive: true,
+                    );
+                    if (confirmed != true || !context.mounted) return;
+                    final result = await controller.delete();
+                    if (!context.mounted) return;
+                    if (result case Err(:final failure)) {
+                      AppSnackbar.show(context, message: failure.message);
+                    } else {
+                      context.pop();
+                    }
+                  },
+          ),
         ],
       ),
       body: projectAsync.when(

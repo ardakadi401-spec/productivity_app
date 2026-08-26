@@ -32,6 +32,8 @@ class ProjectDetailController extends AutoDisposeFamilyStreamNotifier<Project?, 
       Err(:final failure) => Err(failure),
     };
   }
+
+  Future<Result<void>> delete() => ref.read(deleteProjectUseCaseProvider).call(arg);
 }
 
 final projectDetailControllerProvider =

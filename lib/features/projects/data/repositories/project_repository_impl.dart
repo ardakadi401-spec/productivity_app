@@ -17,10 +17,15 @@ import '../models/project_local_model.dart';
 /// (anında, `pendingX` işaretiyle) yazılır, bağlantı varsa arka planda
 /// Firestore'a gönderilir.
 ///
-/// FAZ 14 — `SyncableRepository`'yi de implemente eder. NOT: PRD.md §233/§370
-/// gereği Projects'te manuel silme YOKTUR (yalnızca arşivleme) — bu, FAZ 14
-/// kapsamında da eklenmedi; `syncPending()` yalnızca mevcut pendingCreate/
-/// pendingUpdate akışını flush eder.
+/// FAZ 14 — `SyncableRepository`'yi de implemente eder.
+///
+/// GÜNCELLEME: PRD.md §233/§370, projelerde yalnızca arşivlemeyi (silme
+/// yerine geri getirilebilir) öngörmüştü — ancak bu, uygulamadaki HER DİĞER
+/// varlığın (Task/SubTask/Note/Habit) zaten sahip olduğu "sil + geri
+/// alınamaz onayı" desenine göre Projects'i tutarsız bir istisna haline
+/// getiriyordu. Kullanıcı isteğiyle gerçek (soft-delete) silme eklendi;
+/// arşivleme de "veriyi kaybetmeden düzenle" ihtiyacı için ayrıca
+/// korunuyor — ikisi birbirini dışlamaz, farklı amaçlara hizmet eder.
 class ProjectRepositoryImpl implements ProjectRepository, SyncableRepository {
   ProjectRepositoryImpl(this._local, this._remote, this._connectivity) {
     unawaited(_syncFromRemote());
@@ -103,6 +108,21 @@ class ProjectRepositoryImpl implements ProjectRepository, SyncableRepository {
         await _local.putProject(existing);
         await _trySyncProject(existing);
         return ProjectMapper.toEntity(existing);
+      });
+
+  @override
+  Future<Result<void>> deleteProject(String projectId) => _guard(() async {
+        final existing = await _local.getByProjectId(projectId);
+        if (existing == null) throw const CacheException('Proje bulunamadı.');
+        final now = DateTime.now();
+        existing
+          ..isDeleted = true
+          ..deletedAt = now
+          ..updatedAt = now
+          ..localUpdatedAt = now
+          ..syncStatus = ProjectSyncStatusLocal.pendingDelete;
+        await _local.putProject(existing);
+        await _trySyncProject(existing);
       });
 
   /// Bağlantı varsa Firestore'a gönderir; başarısız olursa sessizce
