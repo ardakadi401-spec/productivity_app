@@ -1,14 +1,13 @@
 # Gizlilik Politikası — Productivity App
 
-**Son güncelleme:** 25 Ağustos 2026
+**Son güncelleme:** 26 Ağustos 2026
 
 > **Yayınlanan sayfa (Play/App Store'a eklenecek URL):**
 > https://claude.ai/code/artifact/80d0d46a-296f-4fd4-8190-2753b81f7675
 >
 > Bu dosya (`PRIVACY_POLICY.md`) referans/versiyon kontrolü içindir — yukarıdaki
-> Artifact sayfası mağaza formlarına eklenecek gerçek, canlı URL'dir. Store
-> Console'a eklemeden önce sayfanın paylaşım menüsünden **herkese açık**
-> yapılması gerekir (varsayılan olarak private yayınlanır).
+> Artifact sayfası mağaza formlarına eklenecek gerçek, canlı URL'dir. Sayfa
+> **herkese açık** olarak paylaşılmıştır, Play Console'a doğrudan eklenebilir.
 
 Bu gizlilik politikası, Productivity App ("Uygulama") tarafından toplanan, kullanılan ve saklanan verileri açıklar. Uygulamayı kullanarak bu politikayı kabul etmiş olursunuz.
 
@@ -73,4 +72,4 @@ Uygulama genel kullanıcı kitlesine yöneliktir ve bilerek 13 yaşın altındak
 Bu politika güncellenirse, güncel sürüm bu sayfada yayınlanır ve sayfanın en üstündeki "Son güncelleme" tarihi değiştirilir.
 
 ## 9. İletişim
-Bu gizlilik politikasıyla ilgili sorularınız için: **[GELİŞTİRİCİ İLETİŞİM E-POSTASI BURAYA EKLENECEK]**
+Bu gizlilik politikasıyla ilgili sorularınız için: **ardakadi401@gmail.com**

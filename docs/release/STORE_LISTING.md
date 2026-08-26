@@ -87,4 +87,4 @@ Play Console'un "Veri Güvenliği" formunu doldururken (form Console arayüzünd
 - Kişisel bilgiler → E-posta adresi, Ad
 - Uygulama etkinliği → Uygulama içi eylemler (görev/not/alışkanlık verisi — "kullanıcının oluşturduğu içerik" kategorisinde)
 
-**Gizlilik Politikası URL'si:** yayınlanan Artifact linki (bkz. `PRIVACY_POLICY.md` başlığı) — Console'a eklemeden önce artifact'ın paylaşım menüsünden herkese açık yapılması gerekir.
+**Gizlilik Politikası URL'si:** yayınlanan Artifact linki (bkz. `PRIVACY_POLICY.md` başlığı) — herkese açık olarak paylaşılmıştır, doğrudan Console'a eklenebilir.
